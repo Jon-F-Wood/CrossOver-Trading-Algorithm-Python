@@ -2,143 +2,153 @@
 All of this code would run bar by bar and plot information on the graph 
 based on TS framework mode of interpretation
 
-Data1 = Shorter Timeframe Bid 
-	This adds detail to the actual timeframe the strategy is running on
-	This is also what the code is running on by default so any time data is desired to be access from any other timeframe it needed to be directly excpressed
-Data2 = Shorter Timeframe Ask 
-	This adds detail to the actual timeframe the strategy is running on
-Data3 = Longer Timeframe Bid 
-	This is the timeframe the strategy is actually running on
-Data4 = Longer Timeframe Ask
-	This is the timeframe the strategy is actually running on
-
 2 Excel Spreadsheets/ arrays and BarsBack is an array holding that information needed for the highest numbered indicator on the user input settings
+
+
+
 '''
-def CO_Indicator (O,H,L,C, O2,H2,L2,C2, Date12,Time12,BarsBack12, O3,H3,L3,C3, O4,H4,L4,C4, Date34,Time34, BarsBack34):
-
-
-	#Inputs:  	
-		JL1 = 39		   	 	  #Length of JumpLine 1 (Typically is JL1 < JL2)
-		JL2 = 10 			      #Length of JumpLine 2 (Typically is JL2 > JL1)
-		CloseCancelsCross = 1	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
-		UseJLCDFilter = 0 
-		JLCDLength = 7
-		TargetLength = 4.882 	  #High + ((High - Low) * Tgt) = The Price that the Target is Placed
-		BreakevenTarget = 1.37    #High + ((High - Low) * BreakevenTarget) = The Price Where the StopLoss is moved up to Breakeven
-		TrailingJL = 11		   	  #JL used for Trailing
-		TrailingTarget = 1.12     #The Point at which the trade begins to trail
-		TrailingOffSetTics = 2    #How Many ticks Below the MA the Stop is Trailed	
-		EntryOffsetTics = 13      #High + (EntryOffsetTics/PriceScale) = the Price where the Entry is Placed
-		StopOffsetTics = -4       #Low - (StopOffsetTIcs/PriceScale) = The Price where the StopLoss is Placed	
-		UseRiskFilter = 1		  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
-		MaxTicsRisk = 790		  #Maximum tics risk for a trade to be considered valid
-		MinTicsRisk = 120		  #Minimum tics risk for a trade to be considered valid
-		PlotAddons = 1            #Plot all Setups even when in the Market.  1/On : 0/Off
-		ShowMaxBarsBack = 0
-			
-	#Variables:
-		_JL1 = 0 				   #JumpLine1 (Tenkan-Sen)
-		_JL2 = 0 				   #JumpLine2	(Tenkan-Sen)
-		_TrailingJL = 0			   #JumpLine used for trailing
-			
-		TheEntryPriceS = 0		   #Holds the Entry Price on Currently active Short Orders	
-		TheEntryPriceL = 0		   #Holds the Entry Price on Currently active Long Orders	
+#Plot all Setups even when in the Market.  1/On : 0/Off
+	ShowMaxBarsBack = 0
 		
-		TheStopPriceS = 0		   #Holds the Stop Price on Currently active Short Orders
-		TheStopPriceL = 0	       #Holds the Stop Price on Currently active Long Orders
+#Variables:
+	_JL1 = 0 				   #JumpLine1 (Tenkan-Sen)
+	_JL2 = 0 				   #JumpLine2	(Tenkan-Sen)
+	_TrailingJL = 0			   #JumpLine used for trailing
 		
-		TheBreakevenTgtS = 0	   #Holds the Breakeven Target Price on Currently active Short Orders	
-		TheBreakevenTgtL = 0	   #Holds the Breakeven Target Price on Currently active Long Orders	
-		
-		TheTrailingTgtS = 0		   #Holds the Trialing Target Price on Currently active Short Orders
-		TheTrailingTgtL = 0		   #Holds the Trialing Target Price on Currently active Long Orders
-			
-		TheTrailingPriceS = 0	   #Holds the Price that the Trailing Stop Should be Placed on Short Orders
-		TheTrailingPriceL = 0	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
-		
-		TheTargetPriceS = 0		   #Holds the Target Price on Currently active Short Orders
-		TheTargetPriceL = 0		   #Holds the Target Price on Currently active Long Orders
-		
-		PipsRiskS = 0
-		PipsRiskL = 0
-		
-		MyJLCD = 0
-		JLCDAvg = 0
-		JLCDDiff = 0
-		
-	#Variables used to Tell use what MaxBarsBack needs to be set to	
-		Counting =False
-		Counter = 0
-		NumBarsJLsEqual = 0
-		MaxBarsJLsEqual = 0
-		
-	#Conditional Variables that Hold thier value until changed by a condition	
-		ASetupIsActiveS = False 	 #This Records if a Short Setup has been Placed or if has been Entered or if it has been cancled
-		ASetupIsActiveL = False 	 #This Records if a Long Setup has been Placed or if has been Entered or if it has been cancled
-		
-		StopIsAtBrkEvnS = False      #This Records if a Short Position's Stop is Currenly at Breakeven
-		StopIsAtBrkEvnL = False      #This Records if a Long Position's Stop is Currenly at Breakeven
-		
-		TrailingIsOnS = False		 #The Short Trailing Tgt Has been hit
-		TrailingIsOnL = False		 #The Long Trailing Tgt Has been hit
-		
-		NowTrailingS = False  	     #Short Position's Stop is Now Trailing
-		NowTrailingL = False  	     #Long Position's Stop is Now Trailing
-		
-	#Conditional Variables that are evaluated bar by bar		
-		RedBar = False 			     #Is the Current Bar an Down(Red) Bar
-		GreenBar = False 			 #Is the Current Bar an Up(Green) Bar	
-		
-		CloseLessThanJL2 = False     #The Close price of the Current Bar is Lower Than the JL2 Value
-		CloseHigherThanJL2 = False   #The Close price of the Current Bar is Higher Than the JL2 Value
-
-		JL1CrossedOverJL2 = False	 #Shows there is a Cross Over and no setup has been activated 
-		JL1CrossedUnderJL2 = False	 #Shows there is a Cross Under and no setup has been activated
-		
-		HasNotEnteredYetS = False    #The Low of the Current Bar Is Higher Than the Currently Active Short Position's Entry Price (It hasn't Entered Yet)
-		HasNotEnteredYetL = False    #The High of the Current Bar Is Less Than the Currently Active Long Position's Entry Price (It hasn't Entered Yet)	
-		
-		HasYetToHitStopS = False     #The High of the Current Bar is Lower than the Currently Active Short Position's Stop Price (It hasn't Stopped Out Yet)
-		HasYetToHitStopL = False     #The Low of the Current Bar is Higher than the Currently Active Long Position's Stop Price (It hasn't Stopped Out Yet)
-		
-		HasYetToHitBrkEvnS = False	 #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
-		HasYetToHitBrkEvnL = False	 #The High Of the Current Bar is Lower than the Currently Acive Long Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
-		
-		HasYetToHitTrialingS = False #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Trailing Target (Trailing Tgt has yet to be Hit)
-		HasYetToHitTrialingL = False #The High Of the Current Bar is Lower than the Currently Acive Long Position's Trailing Target (Trailing Tgt has yet to be Hit)
-		
-		HasYetToHitTargetS = False   #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Target Price (It hasn't Hit Target Yet)
-		HasYetToHitTargetL = False   #The High Of the Current Bar is Lower than the Currently Acive Long Position's Target Price (It hasn't Hit Target Yet) r
-	 	
-	 	CurrentlyInMarketS = False #Used to tell whether or not the system is currently in a Short position or not
-	 	CurrentlyInMarketL = False #Used to tell whether or not the system is currently in a Long position or not
-	 
-	 	StageOrder = False	
-	#Change PlotAddons from True/False input to On/Off input (1/On : 0/Off) 
-		_PlotAddons = True      #Last Declaration of a Variable  
-
-	if PlotAddons == 1: 
-		_PlotAddons = True
-	else
-		_PlotAddons = False		
+	TheEntryPriceS = 0		   #Holds the Entry Price on Currently active Short Orders	
+	TheEntryPriceL = 0		   #Holds the Entry Price on Currently active Long Orders	
 	
-	def Highest (price, length):
-		max(price[-length:])
+	TheStopPriceS = 0		   #Holds the Stop Price on Currently active Short Orders
+	TheStopPriceL = 0	       #Holds the Stop Price on Currently active Long Orders
+	
+	TheBreakevenTgtS = 0	   #Holds the Breakeven Target Price on Currently active Short Orders	
+	TheBreakevenTgtL = 0	   #Holds the Breakeven Target Price on Currently active Long Orders	
+	
+	TheTrailingTgtS = 0		   #Holds the Trialing Target Price on Currently active Short Orders
+	TheTrailingTgtL = 0		   #Holds the Trialing Target Price on Currently active Long Orders
+		
+	TheTrailingPriceS = 0	   #Holds the Price that the Trailing Stop Should be Placed on Short Orders
+	TheTrailingPriceL = 0	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
+	
+	TheTargetPriceS = 0		   #Holds the Target Price on Currently active Short Orders
+	TheTargetPriceL = 0		   #Holds the Target Price on Currently active Long Orders
+	
+	PipsRiskS = 0
+	PipsRiskL = 0
+	
+	MyJLCD = 0
+	JLCDAvg = 0
+	JLCDDiff = 0
+	
+#Variables used to Tell use what MaxBarsBack needs to be set to	
+	Counting =False
+	Counter = 0
+	NumBarsJLsEqual = 0
+	MaxBarsJLsEqual = 0
+	
+#Conditional Variables that Hold thier value until changed by a condition	
+	ASetupIsActiveS = False 	 #This Records if a Short Setup has been Placed or if has been Entered or if it has been cancled
+	ASetupIsActiveL = False 	 #This Records if a Long Setup has been Placed or if has been Entered or if it has been cancled
+	
+	StopIsAtBrkEvnS = False      #This Records if a Short Position's Stop is Currenly at Breakeven
+	StopIsAtBrkEvnL = False      #This Records if a Long Position's Stop is Currenly at Breakeven
+	
+	TrailingIsOnS = False		 #The Short Trailing Tgt Has been hit
+	TrailingIsOnL = False		 #The Long Trailing Tgt Has been hit
+	
+	NowTrailingS = False  	     #Short Position's Stop is Now Trailing
+	NowTrailingL = False  	     #Long Position's Stop is Now Trailing
+	
+#Conditional Variables that are evaluated bar by bar		
+	RedBar = False 			     #Is the Current Bar an Down(Red) Bar
+	GreenBar = False 			 #Is the Current Bar an Up(Green) Bar	
+	
+	CloseLessThanJL2 = False     #The Close price of the Current Bar is Lower Than the JL2 Value
+	CloseHigherThanJL2 = False   #The Close price of the Current Bar is Higher Than the JL2 Value
 
+	JL1CrossedOverJL2 = False	 #Shows there is a Cross Over and no setup has been activated 
+	JL1CrossedUnderJL2 = False	 #Shows there is a Cross Under and no setup has been activated
+	
+	HasNotEnteredYetS = False    #The Low of the Current Bar Is Higher Than the Currently Active Short Position's Entry Price (It hasn't Entered Yet)
+	HasNotEnteredYetL = False    #The High of the Current Bar Is Less Than the Currently Active Long Position's Entry Price (It hasn't Entered Yet)	
+	
+	HasYetToHitStopS = False     #The High of the Current Bar is Lower than the Currently Active Short Position's Stop Price (It hasn't Stopped Out Yet)
+	HasYetToHitStopL = False     #The Low of the Current Bar is Higher than the Currently Active Long Position's Stop Price (It hasn't Stopped Out Yet)
+	
+	HasYetToHitBrkEvnS = False	 #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
+	HasYetToHitBrkEvnL = False	 #The High Of the Current Bar is Lower than the Currently Acive Long Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
+	
+	HasYetToHitTrialingS = False #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Trailing Target (Trailing Tgt has yet to be Hit)
+	HasYetToHitTrialingL = False #The High Of the Current Bar is Lower than the Currently Acive Long Position's Trailing Target (Trailing Tgt has yet to be Hit)
+	
+	HasYetToHitTargetS = False   #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Target Price (It hasn't Hit Target Yet)
+	HasYetToHitTargetL = False   #The High Of the Current Bar is Lower than the Currently Acive Long Position's Target Price (It hasn't Hit Target Yet) r
+ 	
+ 	CurrentlyInMarketS = False #Used to tell whether or not the system is currently in a Short position or not
+ 	CurrentlyInMarketL = False #Used to tell whether or not the system is currently in a Long position or not
+ 
+ 	StageOrder = False	
+#Change PlotAddons from True/False input to On/Off input (1/On : 0/Off) 
+	_PlotAddons = True      #Last Declaration of a Variable 
+
+
+#Inputs:  	
+	JL1 = 39		   	 	  #Length of JumpLine 1 (Typically is JL1 < JL2)
+	JL2 = 10 			      #Length of JumpLine 2 (Typically is JL2 > JL1)
+	CloseCancelsCross = 1	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
+	UseJLCDFilter = 0 
+	JLCDLength = 7
+	TargetLength = 4.882 	  #High + ((High - Low) * Tgt) = The Price that the Target is Placed
+	BreakevenTarget = 1.37    #High + ((High - Low) * BreakevenTarget) = The Price Where the StopLoss is moved up to Breakeven
+	TrailingJL = 11		   	  #JL used for Trailing
+	TrailingTarget = 1.12     #The Point at which the trade begins to trail
+	TrailingOffSetTics = 2    #How Many ticks Below the MA the Stop is Trailed	
+	EntryOffsetTics = 13      #High + (EntryOffsetTics/PriceScale) = the Price where the Entry is Placed
+	StopOffsetTics = -4       #Low - (StopOffsetTIcs/PriceScale) = The Price where the StopLoss is Placed	
+	UseRiskFilter = 1		  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
+	MaxTicsRisk = 790		  #Maximum tics risk for a trade to be considered valid
+	MinTicsRisk = 120		  #Minimum tics risk for a trade to be considered valid
+	PlotAddons = True     
+
+	bar_back = max(JL1,JL2,JLCDLength,TrailingJL)
+	'''
+	Loop through all data in multiples of 6 {i = (i+1)*6}
+		push data onto respective arrays
+			(push i onto arr_O,  i+1 onto arr_H, i+2 onto arr_L etc)
+		if O length > bars_back
+			take off first item in EVERY array
+		
+		if i/6 > bars_back and i + 1 is a multiple of 6 then
+			CO_Indicator(arr_O, arr_H, arr_L,arr_C, arr_Date, arr_Time)
+				print to an excel file
+	'''
+#Overall Functions
+def Highest (price, length):
+	max(price[-length:])
+def Lowest (price, length):
+	min(price[-length:])
+
+def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
+	O = arr_O[-1]
+	H = arr_H[-1]
+	L = arr_L[-1]
+	C = arr_C[-1]
+	Date = arr_Date[-1]
+	Time = arr_Time[-1]
+	#Push to excell file O,H,L,C,Date,Time
 
 	#JLs	
-	_JL1 = (Highest(H3, JL1) + Lowest(L3, JL1))/2 
-	_JL2 = (Highest(H3, JL2) + Lowest(L3, JL2))/2  
+	_JL1 = (Highest(H, JL1) + Lowest(L, JL1))/2 
+	_JL2 = (Highest(H, JL2) + Lowest(L, JL2))/2  
 	_TrailingJL = (Highest(H3, TrailingJL) + Lowest(L3, TrailingJL))/2  
 
-	Plot1(_JL1,"JL1",Rgb(255,128,128))
-	Plot2(_JL2, "JL2",Green)
-	Plot3(_TrailingJL, "TrailingJL",Blue) 
+	#Push to excell file _JL1,_JL2,_TrailingJL
 
-
-	{This Section is used to tell the user what to set MaxBarsBack to 
+	'''
+	This Section is used to tell the user what to set MaxBarsBack to 
 	by displaying a number in the print log that should be rounded 
-	up to nearest hundred which is what MaxBarsBack should be set to.} 
+	up to nearest hundred which is what MaxBarsBack should be set to.
+	''' 
 	Array:
 		_NumBarsJLsEqual[](0)
 
