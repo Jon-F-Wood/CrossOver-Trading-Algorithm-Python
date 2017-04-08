@@ -7,44 +7,42 @@ based on TS framework mode of interpretation
 
 
 '''
-#Plot all Setups even when in the Market.  1/On : 0/Off
-	ShowMaxBarsBack = 0
+
 		
 #Variables:
-	_JL1 = 0 				   #JumpLine1 (Tenkan-Sen)
-	_JL2 = 0 				   #JumpLine2	(Tenkan-Sen)
-	_TrailingJL = 0			   #JumpLine used for trailing
+	JL1 = None 				   #JumpLine1 (Tenkan-Sen)
+	JL2 = None 				   #JumpLine2	(Tenkan-Sen)
+	_TrailingJL = None			   #JumpLine used for trailing
 		
-	TheEntryPriceS = 0		   #Holds the Entry Price on Currently active Short Orders	
-	TheEntryPriceL = 0		   #Holds the Entry Price on Currently active Long Orders	
+	TheEntryPriceS = None		   #Holds the Entry Price on Currently active Short Orders	
+	TheEntryPriceL = None		   #Holds the Entry Price on Currently active Long Orders	
 	
-	TheStopPriceS = 0		   #Holds the Stop Price on Currently active Short Orders
-	TheStopPriceL = 0	       #Holds the Stop Price on Currently active Long Orders
+	TheStopPriceS = None		   #Holds the Stop Price on Currently active Short Orders
+	TheStopPriceL = None	       #Holds the Stop Price on Currently active Long Orders
 	
-	TheBreakevenTgtS = 0	   #Holds the Breakeven Target Price on Currently active Short Orders	
-	TheBreakevenTgtL = 0	   #Holds the Breakeven Target Price on Currently active Long Orders	
+	TheBreakevenTgtS = None	   #Holds the Breakeven Target Price on Currently active Short Orders	
+	TheBreakevenTgtL = None	   #Holds the Breakeven Target Price on Currently active Long Orders	
 	
-	TheTrailingTgtS = 0		   #Holds the Trialing Target Price on Currently active Short Orders
-	TheTrailingTgtL = 0		   #Holds the Trialing Target Price on Currently active Long Orders
+	TheTrailingTgtS = None		   #Holds the Trialing Target Price on Currently active Short Orders
+	TheTrailingTgtL = None		   #Holds the Trialing Target Price on Currently active Long Orders
 		
-	TheTrailingPriceS = 0	   #Holds the Price that the Trailing Stop Should be Placed on Short Orders
-	TheTrailingPriceL = 0	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
+	TheTrailingPriceS = None	   #Holds the Price that the Trailing Stop Should be Placed on Short Orders
+	TheTrailingPriceL = None	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
 	
-	TheTargetPriceS = 0		   #Holds the Target Price on Currently active Short Orders
-	TheTargetPriceL = 0		   #Holds the Target Price on Currently active Long Orders
+	TheTargetPriceS = None		   #Holds the Target Price on Currently active Short Orders
+	TheTargetPriceL = None		   #Holds the Target Price on Currently active Long Orders
 	
-	PipsRiskS = 0
-	PipsRiskL = 0
+	PipsRiskS = None
+	PipsRiskL = None
 	
-	MyJLCD = 0
-	JLCDAvg = 0
-	JLCDDiff = 0
+	MyJLCD = None
+	JLCDAvg = None
+	JLCDDiff = None
 	
 #Variables used to Tell use what MaxBarsBack needs to be set to	
-	Counting =False
-	Counter = 0
-	NumBarsJLsEqual = 0
-	MaxBarsJLsEqual = 0
+	Counting = False
+	NumBarsJLsEqual = None
+	MaxBarsJLsEqual = None
 	
 #Conditional Variables that Hold thier value until changed by a condition	
 	ASetupIsActiveS = False 	 #This Records if a Short Setup has been Placed or if has been Entered or if it has been cancled
@@ -91,31 +89,39 @@ based on TS framework mode of interpretation
 #Change PlotAddons from True/False input to On/Off input (1/On : 0/Off) 
 	_PlotAddons = True      #Last Declaration of a Variable 
 
-
+#Overall Functions of framework
+	LastBarOnChart = False
 #Arrays:
 	_NumBarsJLsEqual = []
 
 
 #Inputs:  	
-	JL1 = 39		   	 	  #Length of JumpLine 1 (Typically is JL1 < JL2)
-	JL2 = 10 			      #Length of JumpLine 2 (Typically is JL2 > JL1)
-	CloseCancelsCross = 1	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
-	UseJLCDFilter = 0 
-	JLCDLength = 7
-	TargetLength = 4.882 	  #High + ((High - Low) * Tgt) = The Price that the Target is Placed
-	BreakevenTarget = 1.37    #High + ((High - Low) * BreakevenTarget) = The Price Where the StopLoss is moved up to Breakeven
-	TrailingJL = 11		   	  #JL used for Trailing
-	TrailingTarget = 1.12     #The Point at which the trade begins to trail
-	TrailingOffSetTics = 2    #How Many ticks Below the MA the Stop is Trailed	
-	EntryOffsetTics = 13      #High + (EntryOffsetTics/PriceScale) = the Price where the Entry is Placed
-	StopOffsetTics = -4       #Low - (StopOffsetTIcs/PriceScale) = The Price where the StopLoss is Placed	
-	UseRiskFilter = 1		  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
-	MaxTicsRisk = 790		  #Maximum tics risk for a trade to be considered valid
-	MinTicsRisk = 120		  #Minimum tics risk for a trade to be considered valid
-	PlotAddons = True     
+	input_JL1 = 39		   	 	  	  #Length of JumpLine 1 (Typically is JL1 < JL2)
+	input_JL2 = 10 			      	  #Length of JumpLine 2 (Typically is JL2 > JL1)
+	input_CloseCancelsCross = 1	  	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
+	input_UseJLCDFilter = 0 
+	input_JLCDLength = 7
+	input_TargetLength = 4.882 	      #High + ((High - Low) * Tgt) = The Price that the Target is Placed
+	input_BreakevenTarget = 1.37      #High + ((High - Low) * BreakevenTarget) = The Price Where the StopLoss is moved up to Breakeven
+	input_TrailingJL = 11		   	  #JL used for Trailing
+	input_TrailingTarget = 1.12       #The Point at which the trade begins to trail
+	input_TrailingOffSetTics = 2      #How Many ticks Below the MA the Stop is Trailed	
+	input_EntryOffsetTics = 13        #High + (EntryOffsetTics/PriceScale) = the Price where the Entry is Placed
+	input_StopOffsetTics = -4         #Low - (StopOffsetTIcs/PriceScale) = The Price where the StopLoss is Placed	
+	input_UseRiskFilter = 1		  	  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
+	input_MaxTicsRisk = 790		  	  #Maximum tics risk for a trade to be considered valid
+	input_MinTicsRisk = 120		  	  #Minimum tics risk for a trade to be considered valid
+	input_PlotAddons = True     	  #Plot all Setups even when in the Market.  1/On : 0/Off
+	input_Include_JLs_Equal = False	  #if true includes the length of JLs being equil in the calculation of bars_back
 
-	bar_back = max(JL1,JL2,JLCDLength,TrailingJL)
+	if Include_JLs_Equal:
+
+	else:				
+		bar_back = max(input_JL1, input_JL2, input_JLCDLength, input_TrailingJL)
+
+def process_function(dataArray, function):
 	'''
+	!!!make this process a function and the last arugument is a function that runs inside the code
 	!!!MAKE ORIGINAL DATA INTO TUPLE
 	Loop through all data in multiples of 6 {i = (i+1)*6}
 		push data onto respective arrays
@@ -124,7 +130,9 @@ based on TS framework mode of interpretation
 			take off first item in EVERY array
 		
 		if i/6 > bars_back and i + 1 is a multiple of 6 then
-			CO_Indicator(arr_O, arr_H, arr_L,arr_C, arr_Date, arr_Time)
+			if dataArray[i+5] == dataArray[-1]:
+				LastBarOnChart = True
+			function(arr_O, arr_H, arr_L,arr_C, arr_Date, arr_Time, LastBarOnChart)
 				print to an excel file
 	'''
 #Overall Functions
@@ -132,6 +140,45 @@ def Highest (price, length):
 	max(price[-length:])
 def Lowest (price, length):
 	min(price[-length:])
+
+def maxBarsBack(arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time, LastBarOnChart):
+	O = arr_O[-1]
+	H = arr_H[-1]
+	L = arr_L[-1]
+	C = arr_C[-1]
+	Date = arr_Date[-1]
+	Time = arr_Time[-1]
+	
+	#prev_ = one bar ago value
+	prev_JL1 = JL1
+	prev_JL2 = JL2
+	prev_Counting = Counting
+
+	#JLs	
+	JL1 = (Highest(H, input_JL1) + Lowest(L, input_JL1))/2 
+	JL2 = (Highest(H, input_JL2) + Lowest(L, input_JL2))/2  
+	TrailingJL = (Highest(H, input_TrailingJL) + Lowest(L, input_TrailingJL))/2  	
+
+	if prev_JL1 != None:
+		if (prev_JL1 != prev_JL2) and (JL1 == JL2):
+			Counting = True
+		elif (prev_JL1 != prev_JL2) and (JL1 != JL2):
+			Counting = False	
+			
+		if Counting:
+			NumBarsJLsEqual += 1				
+		else:	
+			if prev_Counting == True and Counting == False:	
+				_NumBarsJLsEqual.append(NumBarsJLsEqual) 
+				NumBarsJLsEqual = 0
+
+		if LastBarOnChart:
+			MaxBarsJLsEqual = HighestArray(_NumBarsJLsEqual)	
+			max_bars_back = max(JL1,JL2,JLCDLength,TrailingJL, MaxBarsJLsEqual)	
+			return  max_bars_back
+
+
+
 
 def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	O = arr_O[-1]
@@ -141,11 +188,28 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	Date = arr_Date[-1]
 	Time = arr_Time[-1]
 	#Push to excell file O,H,L,C,Date,Time
+	
+	#prev_ = one bar ago value
+	if JL1 != None:	
+		prev_JL1 = JL1
+		prev_JL2 = JL2
+		if input_ShowMaxBarsBack:	
+			prev_Counting = Counting
+		else:
+			prev_CurrentlyInMarketL = CurrentlyInMarketL 
+			prev_CurrentlyInMarketS	= CurrentlyInMarketS
+			prev_ASetupIsActiveL = ASetupIsActiveL
+			prev_ASetupIsActiveS = ASetupIsActiveS
+			prev_TheTrailingPriceL = TheTrailingPriceL
+			prev_TheTrailingPriceS = TheTrailingPriceS
+			prev_TheStopPriceL = TheStopPriceL
+			prev_TheStopPriceS = TheStopPriceS
+
 
 	#JLs	
-	_JL1 = (Highest(H, JL1) + Lowest(L, JL1))/2 
-	_JL2 = (Highest(H, JL2) + Lowest(L, JL2))/2  
-	_TrailingJL = (Highest(H3, TrailingJL) + Lowest(L3, TrailingJL))/2  
+	JL1 = (Highest(H, input_JL1) + Lowest(L, input_JL1))/2 
+	JL2 = (Highest(H, input_JL2) + Lowest(L, input_JL2))/2  
+	TrailingJL = (Highest(H, input_TrailingJL) + Lowest(L, input_TrailingJL))/2  
 
 	#Push to excell file _JL1,_JL2,_TrailingJL
 
@@ -153,37 +217,27 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	This Section is used to tell the user what to set MaxBarsBack to 
 	by displaying a number in the print log that should be rounded 
 	up to nearest hundred which is what MaxBarsBack should be set to.
-	'''
+	'''	
 
-		
-	if (_JL1[1] <> _JL2[1]) and (_JL1 = _JL2)then
+	if (prev_JL1 != prev_JL2) and (JL1 == JL2):
 		Counting = True
-	else if (_JL1[1] = _JL2[1]) and (_JL1 <> _JL2) then
+	elif (prev_JL1 != prev_JL2) and (JL1 != JL2):
 		Counting = False	
 		
-	if Counting then
-		Begin
-			NumBarsJLsEqual = NumBarsJLsEqual + 1
-		End
-	else
-		Begin		
-			if Counting[1] = True and Counting = False then
-				Begin				
-					_NumBarsJLsEqual[Counter] = NumBarsJLsEqual 
-					Counter = Counter + 1	
-					NumBarsJLsEqual = 0
-				End
-		End	
+	if Counting:
+		NumBarsJLsEqual += 1				
+	else:	
+		if prev_Counting == True and Counting == False:	
+			_NumBarsJLsEqual.append(NumBarsJLsEqual) 
+			NumBarsJLsEqual = 0
 
-	if LastBarOnChart then
-		Begin	
-			if ShowMaxBarsBack = 1 then
-				Begin
-					ClearPrintLog
-					MaxBarsJLsEqual = HighestArray(_NumBarsJLsEqual, Counter)
-					Print("Max Bars in a row that JL are Equal:  ",MaxBarsJLsEqual:5:0)
-				End	
-		End
+	if LastBarOnChart:
+		if ShowMaxBarsBack: 
+			MaxBarsJLsEqual = HighestArray(_NumBarsJLsEqual)
+			#Print("Max Bars in a row that JL are Equal:  ", MaxBarsJLsEqual)
+				
+
+
 
 	if CurrentlyInMarketL = True and DayofWeek(Date) = Friday and Time = 1500 then
 		Plot12(Close,"Exit", Magenta)
@@ -237,7 +291,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	HasYetToHitTrialingL = High < TheTrailingTgtL
 
 	if CurrentlyInMarketL = False and CurrentlyInMarketS = False and 
-	(CurrentlyInMarketL[1] = True or CurrentlyInMarketS[1] = True) then	
+	(prev_CurrentlyInMarketL = True or prev_CurrentlyInMarketS = True) then	
 		Begin
 			JL1CrossedOverJL2 = False
 			JL1CrossedUnderJL2 = False
@@ -403,15 +457,15 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 					if (TheTrailingPriceS < (TheEntryPriceS - Spread(20))) and TrailingIsOnS  = True then					
 						NowTrailingS = True	
 					
-					if NowTrailingS and TheTrailingPriceS > TheTrailingPriceS[1] then
-						TheTrailingPriceS = TheTrailingPriceS[1]		
+					if NowTrailingS and TheTrailingPriceS > prev_TheTrailingPriceS then
+						TheTrailingPriceS = prev_TheTrailingPriceS		
 										
 					if NowTrailingS = True and TheTrailingPriceS < TheEntryPriceS and TheTrailingPriceS < TheStopPriceS then
 						Begin
 							if Close < TheTrailingPriceS then
 								TheStopPriceS = TheTrailingPriceS
 							else
-								TheStopPriceS = TheStopPriceS[1]
+								TheStopPriceS = prev_TheStopPriceS
 						End					
 				End
 				
@@ -520,15 +574,15 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 					if (TheTrailingPriceL > (TheEntryPriceL + Spread(20))) and TrailingIsOnL = True then					
 						NowTrailingL = True								
 					
-					if NowTrailingL and TheTrailingPriceL < TheTrailingPriceL[1] then
-						TheTrailingPriceL = TheTrailingPriceL[1]
+					if NowTrailingL and TheTrailingPriceL < prev_TheTrailingPriceL then
+						TheTrailingPriceL = prev_TheTrailingPriceL
 						
 					if NowTrailingL and TheTrailingPriceL > TheEntryPriceL and TheTrailingPriceL > TheStopPriceL then
 						Begin		
 							if Close > TheTrailingPriceL then
 								TheStopPriceL = TheTrailingPriceL
 							else
-								TheStopPriceL = TheStopPriceL[1]
+								TheStopPriceL = prev_TheStopPriceL
 						End						
 				End
 				
@@ -753,16 +807,16 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			
 		End
 			
-	if ASetupIsActiveL[1] or CurrentlyInMarketL[1] then
+	if prev_ASetupIsActiveL or prev_CurrentlyInMarketL then
 		Begin	
 			SetPlotColor[1](11, Green)
 			Plot11[1]("Long", "Type")
 		End
 		
-	if ASetupIsActiveS[1] or CurrentlyInMarketS[1] then
+	if prev_ASetupIsActiveS or prev_CurrentlyInMarketS then
 		Begin	
 			SetPlotColor[1](11, Red)
 			Plot11[1]("Short", "Type")				
 		End	
 
-	End#End of Code	
+#End of Code	
