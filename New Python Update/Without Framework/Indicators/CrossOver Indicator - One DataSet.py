@@ -92,6 +92,10 @@ based on TS framework mode of interpretation
 	_PlotAddons = True      #Last Declaration of a Variable 
 
 
+#Arrays:
+	_NumBarsJLsEqual = []
+
+
 #Inputs:  	
 	JL1 = 39		   	 	  #Length of JumpLine 1 (Typically is JL1 < JL2)
 	JL2 = 10 			      #Length of JumpLine 2 (Typically is JL2 > JL1)
@@ -112,6 +116,7 @@ based on TS framework mode of interpretation
 
 	bar_back = max(JL1,JL2,JLCDLength,TrailingJL)
 	'''
+	!!!MAKE ORIGINAL DATA INTO TUPLE
 	Loop through all data in multiples of 6 {i = (i+1)*6}
 		push data onto respective arrays
 			(push i onto arr_O,  i+1 onto arr_H, i+2 onto arr_L etc)
@@ -148,11 +153,8 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	This Section is used to tell the user what to set MaxBarsBack to 
 	by displaying a number in the print log that should be rounded 
 	up to nearest hundred which is what MaxBarsBack should be set to.
-	''' 
-	Array:
-		_NumBarsJLsEqual[](0)
+	'''
 
-	Array_setmaxindex(_NumBarsJLsEqual,10000)
 		
 	if (_JL1[1] <> _JL2[1]) and (_JL1 = _JL2)then
 		Counting = True
