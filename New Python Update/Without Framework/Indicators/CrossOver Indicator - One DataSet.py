@@ -23,8 +23,8 @@ based on TS framework mode of interpretation
 	TheBreakevenTgtS = None	   #Holds the Breakeven Target Price on Currently active Short Orders	
 	TheBreakevenTgtL = None	   #Holds the Breakeven Target Price on Currently active Long Orders	
 	
-	TheTrailingTgtS = None		   #Holds the Trialing Target Price on Currently active Short Orders
-	TheTrailingTgtL = None		   #Holds the Trialing Target Price on Currently active Long Orders
+	TheTrailingTgtS = None		   #Holds the Trailing Target Price on Currently active Short Orders
+	TheTrailingTgtL = None		   #Holds the Trailing Target Price on Currently active Long Orders
 		
 	TheTrailingPriceS = None	   #Holds the Price that the Trailing Stop Should be Placed on Short Orders
 	TheTrailingPriceL = None	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
@@ -76,8 +76,8 @@ based on TS framework mode of interpretation
 	HasYetToHitBrkEvnS = False	 #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
 	HasYetToHitBrkEvnL = False	 #The High Of the Current Bar is Lower than the Currently Acive Long Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
 	
-	HasYetToHitTrialingS = False #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Trailing Target (Trailing Tgt has yet to be Hit)
-	HasYetToHitTrialingL = False #The High Of the Current Bar is Lower than the Currently Acive Long Position's Trailing Target (Trailing Tgt has yet to be Hit)
+	HasYetToHitTrailingS = False #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Trailing Target (Trailing Tgt has yet to be Hit)
+	HasYetToHitTrailingL = False #The High Of the Current Bar is Lower than the Currently Acive Long Position's Trailing Target (Trailing Tgt has yet to be Hit)
 	
 	HasYetToHitTargetS = False   #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Target Price (It hasn't Hit Target Yet)
 	HasYetToHitTargetL = False   #The High Of the Current Bar is Lower than the Currently Acive Long Position's Target Price (It hasn't Hit Target Yet) r
@@ -99,8 +99,8 @@ based on TS framework mode of interpretation
 #Inputs:  	
 	input_JL1 = 39		   	 	  	  #Length of JumpLine 1 (Typically is JL1 < JL2)
 	input_JL2 = 10 			      	  #Length of JumpLine 2 (Typically is JL2 > JL1)
-	input_CloseCancelsCross = 1	  	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
-	input_UseJLCDFilter = 0 
+	input_CloseCancelsCross = True	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
+	input_UseJLCDFilter = False       
 	input_JLCDLength = 7
 	input_TargetLength = 4.882 	      #High + ((High - Low) * Tgt) = The Price that the Target is Placed
 	input_BreakevenTarget = 1.37      #High + ((High - Low) * BreakevenTarget) = The Price Where the StopLoss is moved up to Breakeven
@@ -114,7 +114,8 @@ based on TS framework mode of interpretation
 	input_MinTicsRisk = 120		  	  #Minimum tics risk for a trade to be considered valid
 	input_PlotAddons = True     	  #Plot all Setups even when in the Market.  1/On : 0/Off
 	input_Include_JLs_Equal = False	  #if true includes the length of JLs being equil in the calculation of bars_back
-	input_PriceScale = 10000
+	input_PriceScale = 10000		  # 1/pricescale = number of decimals in the underlying asset
+	input_ExpectedTicsSlippage = 10	  # this is the expected slippage used to offset the breakeven stop
 
 	if Include_JLs_Equal:
 		bars_back = process_function(data, MaxBarsBack)
@@ -134,7 +135,7 @@ def process_function(dataArray, functionName):
 		if O length > bars_back
 			take off first item in EVERY array
 		
-		if i/6 > bars_back and i + 1 is a multiple of 6 then
+		if i/6 > bars_back and i + 1 is a multiple of 6:
 			if dataArray[i+5] == dataArray[-1]:
 				LastBarOnChart = True
 			functionName(arr_O, arr_H, arr_L,arr_C, arr_Date, arr_Time, LastBarOnChart)
@@ -187,54 +188,29 @@ def maxBarsBack(arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time, LastBarOnChart):
 			return  max_bars_back
 
 def CrossOver(arr1, arr2, BarsBack):
-	#Reset CrossOver after 1 Bar
-	CrossOver = False
-
-	#Obvious CrossOver
-	if (arr1[-2] < arr2[-2]) and (arr1[-1] > arr2[-1]):
-		CrossOver = True	
-
-	#Not So obvious Crossover
-	elif (arr1[-2] == arr2[-2]) and (arr1[-1] > arr2[-1]):
-		for i in xrange(2, BarsBack): #Loop through until...
-			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
-				if arr1[i] < arr2[i]: #check if it was below before
-					CrossOver = True
-				else:
 					CrossOver = False
 								
 				break	
 			
-			#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossOver
+			#Assume that if that if the last evaluated bar is reached and is still equal: there is a CrossOver
 			if i == BarsBack and (arr1[i] == arr2[i]):
 				CrossOver = True
 
 	return CrossOver
 
 def CrossUnder(arr1, arr2, BarsBack):
-	#Reset CrossUnder after 1 Bar
-	CrossUnder = False
-
-	#Obvious CrossUnder
-	if (arr1[-2] > arr2[-2]) and (arr1[-1] < arr2[-1]):
-		CrossUnder = True	
-
-	#Not So obvious CrossUnder
-	elif (arr1[-2] == arr2[-2]) and (arr1[-1] < arr2[-1]):
-		for i in xrange(2, BarsBack): #Loop through until...
-			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
-				if arr1[i] > arr2[i]: #check if it was below before
-					CrossUnder = True
-				else:
 					CrossUnder = False
 								
 				break	
 			
-			#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossUnder
+			#Assume that if that if the last evaluated bar is reached and is still equal: there is a CrossUnder
 			if i == BarsBack and (arr1[i] == arr2[i]):
 				CrossUnder = True
 	
 	return CrossUnder
+
+def JLCD(high, low, JL1, JL2):
+	return JL(high, low, JL1) - JL(high, low, JL2)
 
 def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	O = arr_O[-1]
@@ -260,18 +236,19 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	JL2 = JL(arr_H, arr_L, input_JL2) 
 	arr_JL1.append(JL1)
 	arr_JL2.append(JL2) 
-	if len(arr_JL1) > bars_back:
+	if len(arr_JL1) > input_JL1:
 		del arr_JL1[0]
+	if len(arr_JL2) > input_JL2:
 		del arr_JL2[0]
 
-	TrailingJL = (Highest(H, input_TrailingJL) + Lowest(L, input_TrailingJL))/2  
+	TrailingJL = JL(arr_H, arr_L, input_TrailingJL) 
 
 	#Push to excell file _JL1,_JL2,_TrailingJL
 
 	#!!!Time needs to be close time of the bars
 	#Exit Trade if market close on weekends
 	if (CurrentlyInMarketL == True or CurrentlyInMarkets == True) and DayofWeek(Date) == Friday and Time == 1500:
-		#Indicate to excell file that the trade was exited on close of this bar
+		#Indicate to excell file that the trade was exited on close of this bar (possibly also indicate it was due to it being the weekend)
 		
 	if DayofWeek(Date) == Friday and Time >= 1500:
 			CurrentlyInMarketL = False 
@@ -283,8 +260,9 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	elif (DayofWeek(Date) > Sunday) or (DayofWeek(Date) = Sunday and Time >= 1800) or (DayofWeek(Date) = Friday and Time < 1500):
 				
 		#Set the Trailing Price
-		TheTrailingPriceS = TrailingJL + (input_TrailingOffSetTics/input_PriceScale)
-		TheTrailingPriceL = TrailingJL - (input_TrailingOffSetTics/input_PriceScale)
+		TrailingOffSetTics = input_TrailingOffSetTics/input_PriceScale
+		TheTrailingPriceS = TrailingJL + TrailingOffSetTics
+		TheTrailingPriceL = TrailingJL - TrailingOffSetTics
 
 
 		#Conditions
@@ -300,338 +278,251 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 		elif CrossUnder(arr_JL1, arr_JL2, bars_back):
 			JL1CrossedOverJL2 = False
 			JL1CrossedUnderJL2 = True
-#Stoping here for lunch			
-		HasNotEnteredYetS = Low > TheEntryPriceS
-		HasYetToHitStopS = High < TheStopPriceS
-		HasYetToHitTargetS = Low > TheTargetPriceS
-		HasYetToHitBrkEvnS = Low > TheBreakevenTgtS
-		HasYetToHitTrialingS = Low > TheTrailingTgtS
 
-		HasNotEnteredYetL = High < TheEntryPriceL
-		HasYetToHitStopL = Low > TheStopPriceL
-		HasYetToHitTargetL = High < TheTargetPriceL
-		HasYetToHitBrkEvnL = High < TheBreakevenTgtL
-		HasYetToHitTrialingL = High < TheTrailingTgtL
+		HasNotEnteredYetS = L > TheEntryPriceS
+		HasYetToHitStopS = H < TheStopPriceS
+		HasYetToHitTargetS = L > TheTargetPriceS
+		HasYetToHitBrkEvnS = L > TheBreakevenTgtS
+		HasYetToHitTrailingS = L > TheTrailingTgtS
 
-		if CurrentlyInMarketL = False and CurrentlyInMarketS = False and 
-		(prev_CurrentlyInMarketL = True or prev_CurrentlyInMarketS = True) then	
-			Begin
-				JL1CrossedOverJL2 = False
-				JL1CrossedUnderJL2 = False
-			End
+		HasNotEnteredYetL = H < TheEntryPriceL
+		HasYetToHitStopL = L > TheStopPriceL
+		HasYetToHitTargetL = H < TheTargetPriceL
+		HasYetToHitBrkEvnL = H < TheBreakevenTgtL
+		HasYetToHitTrailingL = H < TheTrailingTgtL
+
+		if CurrentlyInMarketL == False and CurrentlyInMarketS == False and (prev_CurrentlyInMarketL == True or prev_CurrentlyInMarketS == True): 
+			JL1CrossedOverJL2 = False
+			JL1CrossedUnderJL2 = False
 			
 		#Close Cancels Cross
-		if CloseCancelsCross = 1 then
-			Begin
-				if ASetupIsActiveS and Not ASetupIsActiveL and CloseHigherThanJL2 then
-					ASetupIsActiveS = False
-				if ASetupIsActiveL and Not ASetupIsActiveS and CloseLessThanJL2 then
-					ASetupIsActiveL = False	
-			End
+		if CloseCancelsCross:
+			if ASetupIsActiveS and not ASetupIsActiveL and CloseHigherThanJL2:
+				ASetupIsActiveS = False
+			if ASetupIsActiveL and not ASetupIsActiveS and CloseLessThanJL2:
+				ASetupIsActiveL = False	
 
-		if UseJLCDFilter = 1 then
-			Begin
-				MyJLCD = JLCD(JL1, JL2)
-				JLCDAvg = (Highest(MyJLCD, JLCDLength) + Lowest(MyJLCD, JLCDLength))/2 
-				JLCDDiff = MyJLCD - JLCDAvg
-			End
+		if UseJLCDFilter:
+			JLCD = JLCD(H, L, input_JL1, input_JL2)
+			JLCDAvg = JL(JLCD, JLCD, JLCDLength) 
+			JLCDDiff = JLCD - JLCDAvg
 					
 		#Short ENTRY
-		if ASetupIsActiveS and Not ASetupIsActiveL then
-			Begin
-				if HasNotEnteredYetS then
-					Begin
-						#Cancled?
-						if JL1CrossedOverJL2 = False then
-							Begin
-								Plot8(TheEntryPriceS, "Entry", Cyan)
-							End	
-						else
-							Begin
-								ASetupIsActiveS = False
-							End	
-					End
-				else
-					#if the setup has entered then... 
-					Begin				
-						CurrentlyInMarketS = True
-						ASetupIsActiveS = False													
-					End		
-			End	
+		if ASetupIsActiveS and not ASetupIsActiveL:
+			if HasNotEnteredYetS:
+				#Cancled?
+				if JL1CrossedOverJL2 = False:
+					#Idicate to excel that there is still an entry available at TheEntryPriceS
+				else:
+					ASetupIsActiveS = False
+			else:
+				#if the setup has entered:... 			
+				CurrentlyInMarketS = True
+				ASetupIsActiveS = False	
 
 		#Long ENTRY
-		if ASetupIsActiveL and Not ASetupIsActiveS then
-			Begin
-				if HasNotEnteredYetL then
-					Begin
-						#Cancled?
-						if JL1CrossedUnderJL2 = False then
-							Begin
-								Plot8(TheEntryPriceL, "Entry", Cyan)
-							End	
-						else
-							Begin
-								ASetupIsActiveL = False
-							End	
-					End
-				else
-					#if the setup has entered then... 
-					Begin				
-						CurrentlyInMarketL = True
-						ASetupIsActiveL = False													
-					End		
-			End
+		if ASetupIsActiveL and not ASetupIsActiveS:
+			if HasNotEnteredYetL:
+				#Cancled?
+				if JL1CrossedUnderJL2 = False:
+					#Idicate to excel that there is still an entry available at TheEntryPriceL
+				else:
+					ASetupIsActiveL = False
+			else:
+				#if the setup has entered:... 				
+				CurrentlyInMarketL = True
+				ASetupIsActiveL = False	
 			
 		#Short STOPLOSS	
-		if ASetupIsActiveS or CurrentlyInMarketS and ( Not ASetupIsActiveL or Not CurrentlyInMarketL ) then
-			Begin	
+		if ASetupIsActiveS or CurrentlyInMarketS and ( not ASetupIsActiveL or not CurrentlyInMarketL ):
 			#if There is a trade that has entered...	
-				if CurrentlyInMarketS and Not CurrentlyInMarketL then		
-					Begin		
-					#Evaluate if Stop has been Hit	
-						if HasYetToHitStopS = False then
-							Begin
-								CurrentlyInMarketS = False	
-								StopIsAtBrkEvnS = False						
-								NowTrailingS = False
-								
-							#Is the Trade A Breakeven Or Trailing	
-								if TheStopPriceS <= TheEntryPriceS then 
-									Begin		
-									#Gapping?	
-										if Open > TheStopPriceS then
-											Begin									
-												if TheStopPriceS = TheTrailingPriceS then
-													SetPlotColor(12,Rgb(0,0,170))
-												else
-													SetPlotColor(12,Yellow)
-													
-											#Exit at Open		
-												Plot12(Open, "Exit")
-											End
-										else
-										#No Gapping	
-											Begin	
-												if TheStopPriceS = TheTrailingPriceS then
-													SetPlotColor(12,Rgb(0,0,170))
-												else
-													SetPlotColor(12,Yellow)
-													
-												Plot12(TheStopPriceS, "Exit")
-											End
-									End
-							#Fixed Stop	
-								else
-									Begin
-									#Gapping?	
-										if Open > TheStopPriceS then
-											Begin
-												if StopIsAtBrkEvnS = False then								
-													SetPlotColor(12,Rgb(166,0,0))												
-											
-											#Exit at Open	
-												Plot12(Open, "Exit")
-											End
-										else
-										#No Gapping	
-											Begin
-												if StopIsAtBrkEvnS = False then								
-													SetPlotColor(12,Rgb(166,0,0))	
-													
-												Plot12(TheStopPriceS, "Exit")
-											End		
-									End	
-							End		
-					End
-			
-			#Breakeven and Trailing Stop	
-				if CurrentlyInMarketS and Not CurrentlyInMarketL then		
-					Begin	
-					#Breakeven
-						#Evaluate if Breakeven Target has been hit
-						if HasYetToHitBrkEvnS = False then
-							Begin	
-								TheStopPriceS = (TheEntryPriceS - Spread(60)-(10/Pricescale))
-							#Does the bar hit Breakeven Target then get stopped out on the Same Bar?	
-								if Close >= TheStopPriceS then
-									Begin
-										CurrentlyInMarketS = False
-										SetPlotColor(12,Yellow)
-										Plot12(TheStopPriceS, "Exit")
-										StopIsAtBrkEvnS = False						
-										NowTrailingS = False	
-									End
-								else
-									Begin							
-										StopIsAtBrkEvnS = True	
-									End
-							End		
-							
-						if StopIsAtBrkEvnS and NowTrailingS = False then
-							Begin
-								TheStopPriceS = (TheEntryPriceS - Spread(60)-(10/Pricescale))
-							End
-							
-					#Trailing	
-						#Evaluate if Trailing Target has been hit
-						if HasYetToHitTrialingS = False then
-							TrailingIsOnS = True
-										
-						if (TheTrailingPriceS < (TheEntryPriceS - Spread(20))) and TrailingIsOnS  = True then					
-							NowTrailingS = True	
+			if CurrentlyInMarketS and not CurrentlyInMarketL:	
+				#Evaluate if Stop has been Hit	
+				if HasYetToHitStopS == False:
+					CurrentlyInMarketS = False	
+					StopIsAtBrkEvnS = False						
+					NowTrailingS = False
 						
-						if NowTrailingS and TheTrailingPriceS > prev_TheTrailingPriceS then
-							TheTrailingPriceS = prev_TheTrailingPriceS		
-											
-						if NowTrailingS = True and TheTrailingPriceS < TheEntryPriceS and TheTrailingPriceS < TheStopPriceS then
-							Begin
-								if Close < TheTrailingPriceS then
-									TheStopPriceS = TheTrailingPriceS
-								else
-									TheStopPriceS = prev_TheStopPriceS
-							End					
-					End
-					
-			#Plot Stop a long as the Target hasn't been hit yet
-				if HasYetToHitTargetS and Not CurrentlyInMarketL then
-					Begin
-						if ASetupIsActiveS or CurrentlyInMarketS = True then
-						Plot9 (TheStopPriceS, "Stop", Cyan)
-					End
-			End
+					#Is the Trade A Breakeven Or Trailing	
+					if TheStopPriceS <= TheEntryPriceS: 	
+						#Gapping?	
+						if O > TheStopPriceS:									
+							if TheStopPriceS == TheTrailingPriceS:
+								#indicate to excel that the trade was exited on the Open of this bar due to gapping
+								#and was due to the trailing stoploss
+							else:
+								#indicate to excel that the trade was exited on the Open of this bar due to gapping
+								#and was due to the breakeven stoploss
 
+						#No Gapping
+						else: 
+							if TheStopPriceS == TheTrailingPriceS:
+								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+								#and was due to the trailing stoploss
+							else:
+								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+								#and was due to the breakeven stoploss
+
+					#Fixed Stop	
+					else:
+						#Gapping?	
+						if O > TheStopPriceS:
+							if StopIsAtBrkEvnS == False:								
+								#indicate to excel that the trade was exited on the Open of this bar due to gapping
+								#and was due to the fixed stoploss	
+						#No Gapping
+						else:
+							if StopIsAtBrkEvnS == False:								
+								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+								#and was due to the fixed stoploss
+		
+				#Begin Using Breakeven or Trailing Stop?	
+				#BREAKEVEN - Evaluate if Breakeven Target has been hit
+				if HasYetToHitBrkEvnS == False:
+					TheStopPriceS = (TheEntryPriceS - (input_ExpectedTicsSlippage/input_PriceScale))
+					#Does the bar hit Breakeven Target: get stopped out on the Same Bar?	
+					if C >= TheStopPriceS:
+						CurrentlyInMarketS = False
+						#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+						#and was due to the breakeven stoploss (possibly indicate it was in the same bar as well)
+						StopIsAtBrkEvnS = False						
+						NowTrailingS = False	
+					else:					
+						StopIsAtBrkEvnS = True	
+				
+				#if breakeven target was hit but not trailing target yet	
+				if StopIsAtBrkEvnS and NowTrailingS == False:
+					TheStopPriceS = (TheEntryPriceS - (input_ExpectedTicsSlippage/input_PriceScale))
+						
+				#TRAILING - Evaluate if Trailing Target has been hit
+				if HasYetToHitTrailingS == False:
+					TrailingIsOnS = True
+				
+				#Insure that even though the trailing target has been hit that it doesn't start actually trailing until the 
+				#trailing price is above the entry price (preferably with the spread accounted for)				
+				if (TheTrailingPriceS < TheEntryPriceS) and TrailingIsOnS:					
+					NowTrailingS = True	
+				
+				if NowTrailingS:
+					#Insure that trailing price never goes backwards with a JL
+					if TheTrailingPriceS > prev_TheTrailingPriceS:
+						TheTrailingPriceS = prev_TheTrailingPriceS		
+					
+					#If trailingPrice is beyond the entry and the current stop price				
+					if TheTrailingPriceS < TheEntryPriceS and TheTrailingPriceS < TheStopPriceS:
+						if C < TheTrailingPriceS:
+							TheStopPriceS = TheTrailingPriceS
+						else:
+							TheStopPriceS = prev_TheStopPriceS
+				
+			#Plot Stop as long as the Target hasn't been hit yet
+			if HasYetToHitTargetS and (ASetupIsActiveS or CurrentlyInMarketS) and not CurrentlyInMarketL:
+				#Normally I would plot the stop price even if the setup was active and not entered but idk 
+				#if I'll be doing that with the excell file.  We'll see. Plot9 (TheStopPriceS, "Stop", Cyan)
+		
 		#Long STOPLOSS	
-		if ASetupIsActiveL or CurrentlyInMarketL and ( Not ASetupIsActiveS or Not CurrentlyInMarketS ) then
-			Begin	
+		if ASetupIsActiveL or CurrentlyInMarketL and ( not ASetupIsActiveS or not CurrentlyInMarketS ):
 			#if There is a trade that has entered...	
-				if CurrentlyInMarketL and Not CurrentlyInMarketS then		
-					Begin		
-					#Evaluate if Stop has been Hit	
-						if HasYetToHitStopL = False then
-							Begin
-								CurrentlyInMarketL = False	
-								StopIsAtBrkEvnL = False						
-								NowTrailingL = False
-												
-							#Is the Trade A Breakeven Or Trailing?	
-								if TheStopPriceL >= TheEntryPriceL then 
-									Begin
-									#Gapping?	
-										if Open < TheStopPriceL then
-											Begin	
-												if TheStopPriceL = TheTrailingPriceL then
-													SetPlotColor(12,Rgb(0,0,170))
-												else
-													SetPlotColor(12,Yellow)
-													
-											#if so Exit at the Open of the next bar		
-												Plot12(Open, "Exit")
-											End
-										else
-										#No Gapping	
-											Begin
-												if TheStopPriceL = TheTrailingPriceL then
-													SetPlotColor(12,Rgb(0,0,170))
-												else
-													SetPlotColor(12,Yellow)
-													
-											#if so Exit at the Open of the next bar		
-												Plot12(TheStopPriceL, "Exit")
-											End
-									End		
-							#Fixed Stop 	
-								else
-									Begin
-									#Gapping?	
-										if Open < TheStopPriceL Then
-											Begin				
-												if StopIsAtBrkEvnL = False then								
-													SetPlotColor(12,Rgb(166,0,0))
-													
-												Plot12(Open, "Exit")
-											End
-										else
-										#No Gapping	
-											Begin
-												if StopIsAtBrkEvnL = False then								
-													SetPlotColor(12,Rgb(166,0,0))
-													
-												Plot12(TheStopPriceL, "Exit")
-											End		
-									End	
-							End		
-					End
-			#Breakeven and Trailing Stop	
-				if CurrentlyInMarketL and Not CurrentlyInMarketS then		
-					Begin	
-					#Breakeven
-						#Evaluate if Breakeven Target has been hit
-						if HasYetToHitBrkEvnL = False then
-							Begin	
-								TheStopPriceL = (TheEntryPriceL + Spread(20)+(10/Pricescale))
-							#Does the bar hit Breakeven Target then get stopped out on the Same Bar?	
-								if Close <= TheStopPriceL then
-									Begin
-										CurrentlyInMarketL = False
-										SetPlotColor(12,Yellow)
-										Plot12(TheStopPriceL, "Exit")
-										StopIsAtBrkEvnL = False						
-										NowTrailingL = False	
-									End
-								else
-									Begin							
-										StopIsAtBrkEvnL = True	
-									End
-							End
+			if CurrentlyInMarketL and not CurrentlyInMarketS:	
+				#Evaluate if Stop has been Hit	
+				if HasYetToHitStopL == False:
+					CurrentlyInMarketL = False	
+					StopIsAtBrkEvnL = False						
+					NowTrailingL = False
 						
-						if StopIsAtBrkEvnL and NowTrailingL = False then
-							Begin
-								TheStopPriceL = (TheEntryPriceL + Spread(20)+(10/Pricescale))
-							End			
-							
-					#Trailing	
-					#Evaluate if Trailing Target has been hit				
-						if HasYetToHitTrialingL = False then
-							TrailingIsOnL = True
-										
-						if (TheTrailingPriceL > (TheEntryPriceL + Spread(20))) and TrailingIsOnL = True then					
-							NowTrailingL = True								
+					#Is the Trade A Breakeven Or Trailing	
+					if TheStopPriceL >= TheEntryPriceL: 	
+						#Gapping?	
+						if O < TheStopPriceL:									
+							if TheStopPriceL == TheTrailingPriceL:
+								#indicate to excel that the trade was exited on the Open of this bar due to gapping
+								#and was due to the trailing stoploss
+							else:
+								#indicate to excel that the trade was exited on the Open of this bar due to gapping
+								#and was due to the breakeven stoploss
+
+						#No Gapping
+						else: 
+							if TheStopPriceL == TheTrailingPriceL:
+								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+								#and was due to the trailing stoploss
+							else:
+								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+								#and was due to the breakeven stoploss
+
+					#Fixed Stop	
+					else:
+						#Gapping?	
+						if O < TheStopPriceL:
+							if StopIsAtBrkEvnL == False:								
+								#indicate to excel that the trade was exited on the Open of this bar due to gapping
+								#and was due to the fixed stoploss	
+						#No Gapping
+						else:
+							if StopIsAtBrkEvnL == False:								
+								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+								#and was due to the fixed stoploss
+		
+				#Begin Using Breakeven or Trailing Stop?	
+				#BREAKEVEN - Evaluate if Breakeven Target has been hit
+				if HasYetToHitBrkEvnL == False:
+					TheStopPriceL = (TheEntryPriceL + (input_ExpectedTicsSlippage/input_PriceScale))
+					#Does the bar hit Breakeven Target: get stopped out on the Same Bar?	
+					if C <= TheStopPriceL:
+						CurrentlyInMarketL = False
+						#indicate to excel that the trade was exited on this bar at TheStopPriceS 
+						#and was due to the breakeven stoploss (possibly indicate it was in the same bar as well)
+						StopIsAtBrkEvnL = False						
+						NowTrailingL = False	
+					else:					
+						StopIsAtBrkEvnL = True	
+				
+				#if breakeven target was hit but not trailing target yet	
+				if StopIsAtBrkEvnL and NowTrailingL == False:
+					TheStopPriceL = (TheEntryPriceL + (input_ExpectedTicsSlippage/input_PriceScale))
 						
-						if NowTrailingL and TheTrailingPriceL < prev_TheTrailingPriceL then
-							TheTrailingPriceL = prev_TheTrailingPriceL
-							
-						if NowTrailingL and TheTrailingPriceL > TheEntryPriceL and TheTrailingPriceL > TheStopPriceL then
-							Begin		
-								if Close > TheTrailingPriceL then
-									TheStopPriceL = TheTrailingPriceL
-								else
-									TheStopPriceL = prev_TheStopPriceL
-							End						
-					End
+				#TRAILING - Evaluate if Trailing Target has been hit
+				if HasYetToHitTrailingL == False:
+					TrailingIsOnL = True
+				
+				#Insure that even though the trailing target has been hit that it doesn't start actually trailing until the 
+				#trailing price is above the entry price (preferably with the spread accounted for)				
+				if (TheTrailingPriceL > TheEntryPriceL) and TrailingIsOnL:					
+					NowTrailingL = True	
+				
+				if NowTrailingL:
+					#Insure that trailing price never goes backwards with a JL
+					if TheTrailingPriceL < prev_TheTrailingPriceL:
+						TheTrailingPriceL = prev_TheTrailingPriceL		
 					
-			#Plot Stop a long as the Target hasn't been hit yet
-				if HasYetToHitTargetL and Not CurrentlyInMarketS then
-					Begin
-						if ASetupIsActiveL or CurrentlyInMarketL = True then
-							Plot9(TheStopPriceL, "Stop", Cyan)
-					End
-			End
+					#If trailingPrice is beyond the entry and the current stop price				
+					if TheTrailingPriceL > TheEntryPriceL and TheTrailingPriceL < TheStopPriceL:
+						if C > TheTrailingPriceL:
+							TheStopPriceL = TheTrailingPriceL
+						else:
+							TheStopPriceL = prev_TheStopPriceL
+				
+			#Plot Stop as long as the Target hasn't been hit yet
+			if HasYetToHitTargetL and (ASetupIsActiveL or CurrentlyInMarketL) and not CurrentlyInMarketL:
+				#Normally I would plot the stop price even if the setup was active and not entered but idk 
+				#if I'll be doing that with the excell file.  We'll see. TheStopPriceS
 
 
+#next work on Short Target and below
 		#Short TARGET
-		if CurrentlyInMarketS = True and Not CurrentlyInMarketL then
+		if CurrentlyInMarketS = True and not CurrentlyInMarketL:
 			Begin
-				if HasYetToHitTargetS = False then
+				if HasYetToHitTargetS = False:
 					Begin
 					#Gapping	
-						if Open of Data2 < TheTargetPriceS then
+						if Open of Data2 < TheTargetPriceS:
 							Begin
 								CurrentlyInMarketS = False				
 								Plot12(Open of Data2,"Exit", DarkGreen)
 								StopIsAtBrkEvnS = False
 								NowTrailingS = False
 							End
-						else
+						else:
 						#No Gapping	
 							Begin	
 								CurrentlyInMarketS = False				
@@ -643,19 +534,19 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			End		
 
 		#Long TARGET
-		if CurrentlyInMarketL = True and Not CurrentlyInMarketS then
+		if CurrentlyInMarketL = True and not CurrentlyInMarketS:
 			Begin
-				if HasYetToHitTargetL = False then
+				if HasYetToHitTargetL = False:
 					Begin
 					#Gapping	
-						if Open > TheTargetPriceL then
+						if Open > TheTargetPriceL:
 							Begin
 								CurrentlyInMarketL = False				
 								Plot12(Open,"Exit", DarkGreen)
 								StopIsAtBrkEvnL = False
 								NowTrailingL = False
 							End
-						else
+						else:
 						#No Gapping	
 							Begin	
 								CurrentlyInMarketL = False				
@@ -667,7 +558,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			End	
 			
 		#Looks for a New Short Position	
-		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2 and CurrentlyInMarketS = False and CurrentlyInMarketL = False and ASetupIsActiveL = False and ASetupIsActiveS = False then 
+		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2 and CurrentlyInMarketS = False and CurrentlyInMarketL = False and ASetupIsActiveL = False and ASetupIsActiveS = False: 
 			Begin
 			#Reset Setting	
 				JL1CrossedUnderJL2 = False	
@@ -684,7 +575,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 				TheEntryPriceS = L3 - (EntryOffsetTics/PriceScale)   	  		  		  #Entry 
 				TheStopPriceS = High of Data4  + (StopOffsetTics/PriceScale)     	   				  #Stop	
 								
-				if TheBreakevenTgtS > (TheEntryPriceS - Spread(5)) or TheTrailingTgtS > (TheEntryPriceS - Spread(5)) then
+				if TheBreakevenTgtS > (TheEntryPriceS - Spread(5)) or TheTrailingTgtS > (TheEntryPriceS - Spread(5)):
 					Begin
 						StageOrder = False	
 						ASetupIsActiveS = False
@@ -692,13 +583,13 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 										
 				PipsRiskS = ((TheStopPriceS - TheEntryPriceS) + Spread(20) + (20/Pricescale))*(PriceScale/10)
 				
-				if (UseRiskFilter = 1 and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter = 1 and JLCDDiff > 0)  then
+				if (UseRiskFilter = 1 and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter and JLCDDiff > 0) :
 					Begin
 						ASetupIsActiveS = False
 						StageOrder = False	
 					End
 					
-				if StageOrder then
+				if StageOrder:
 					Begin
 						Plot5(TheTargetPriceS, "Target", Cyan)
 						Plot6(TheTrailingTgtS, "TrailTgt", Cyan)				
@@ -712,7 +603,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			End		
 
 		#Looks for a New Long Position	
-		if JL1CrossedOverJL2 and CloseHigherThanJL2 and GreenBar and CurrentlyInMarketL = False and CurrentlyInMarketS = False and ASetupIsActiveL = False and ASetupIsActiveS = False then 
+		if JL1CrossedOverJL2 and CloseHigherThanJL2 and GreenBar and CurrentlyInMarketL = False and CurrentlyInMarketS = False and ASetupIsActiveL = False and ASetupIsActiveS = False: 
 			Begin
 			#Reset Setting		
 				JL1CrossedOverJL2 = False		
@@ -729,7 +620,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 				TheEntryPriceL = High of Data4 + (EntryOffsetTics/PriceScale)   			  		   #Entry 
 				TheStopPriceL = L3 - (StopOffsetTics/PriceScale)     	   				   #Stop				
 												
-				if TheBreakevenTgtL < (TheEntryPriceL + Spread(5)) or TheTrailingTgtL < (TheEntryPriceL + Spread(5)) then
+				if TheBreakevenTgtL < (TheEntryPriceL + Spread(5)) or TheTrailingTgtL < (TheEntryPriceL + Spread(5)):
 					Begin	
 						StageOrder = False
 						ASetupIsActiveL = False
@@ -737,13 +628,13 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 				
 				PipsRiskL = ((TheEntryPriceL - TheStopPriceL) + Spread(20) + (20/Pricescale))*(PriceScale/10)		
 					
-				if (UseRiskFilter = 1 and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter = 1 and JLCDDiff < 0)  then
+				if (UseRiskFilter = 1 and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter and JLCDDiff < 0) :
 					Begin
 						ASetupIsActiveL = False
 						StageOrder = False	
 					End
 						
-				if StageOrder then
+				if StageOrder:
 					Begin
 						Plot5(TheTargetPriceL, "Target", Cyan)
 						Plot6(TheTrailingTgtL, "TrailTgt", Cyan)	
@@ -757,7 +648,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			End
 
 		#Addon Trades		
-		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2 then 
+		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2: 
 			Begin
 			#Stop looking for now
 				JL1CrossedUnderJL2 = False
@@ -770,13 +661,13 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 				Value4 = L3 - (EntryOffsetTics/PriceScale)  
 				Value5 = High of Data4 + (StopOffsetTics/PriceScale) 			
 					
-				if Value1 > Value4 or Value2 > Value4 or Value3 > Value4  then
+				if Value1 > Value4 or Value2 > Value4 or Value3 > Value4 :
 					StageOrder = False	
 				
-				if UseRiskFilter = 1 and ((((Value5 - Value4)*PriceScale) < MinTicsRisk) or	(((Value5 - Value4)*PriceScale) > MaxTicsRisk)) then
+				if UseRiskFilter = 1 and ((((Value5 - Value4)*PriceScale) < MinTicsRisk) or	(((Value5 - Value4)*PriceScale) > MaxTicsRisk)):
 					StageOrder = False
 					
-				if _PlotAddons and StageOrder then
+				if _PlotAddons and StageOrder:
 					Begin	
 						Plot17(Value1, "*Tgt")						
 						Plot18(Value2, "*TrailTgt")
@@ -789,7 +680,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			End				
 
 		#Addon Trades		
-		if JL1CrossedOverJL2 and CloseHigherThanJL2 and GreenBar then 
+		if JL1CrossedOverJL2 and CloseHigherThanJL2 and GreenBar: 
 			Begin
 			#Stop looking for now
 				JL1CrossedOverJL2 = False
@@ -802,13 +693,13 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 				Value9 = High of Data4 + (EntryOffsetTics/PriceScale)  
 				Value10 = L3 - (StopOffsetTics/PriceScale) 
 								
-				if Value6 < Value9 or Value7 < Value9 or Value8 < Value9 then
+				if Value6 < Value9 or Value7 < Value9 or Value8 < Value9:
 					 StageOrder = False
 				
-				if UseRiskFilter = 1 and ((((Value9 - Value10)*PriceScale) < MinTicsRisk) or (((Value9 - Value10)*PriceScale) > MaxTicsRisk)) then
+				if UseRiskFilter = 1 and ((((Value9 - Value10)*PriceScale) < MinTicsRisk) or (((Value9 - Value10)*PriceScale) > MaxTicsRisk)):
 					StageOrder = False
 				
-				if _PlotAddons and StageOrder then
+				if _PlotAddons and StageOrder:
 					Begin	
 						Plot17(Value6, "*Tgt")
 						Plot18(Value7, "*TrailTgt")						
@@ -820,7 +711,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			End			
 
 		#Misc	
-		if High = 99999999999 then 
+		if High = 99999999999: 
 			Begin	
 				Plot4(0,"=========")
 				Plot10(0,"=========")
@@ -830,13 +721,13 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 				
 			End
 				
-		if prev_ASetupIsActiveL or prev_CurrentlyInMarketL then
+		if prev_ASetupIsActiveL or prev_CurrentlyInMarketL:
 			Begin	
 				SetPlotColor[1](11, Green)
 				Plot11[1]("Long", "Type")
 			End
 			
-		if prev_ASetupIsActiveS or prev_CurrentlyInMarketS then
+		if prev_ASetupIsActiveS or prev_CurrentlyInMarketS:
 			Begin	
 				SetPlotColor[1](11, Red)
 				Plot11[1]("Short", "Type")				
