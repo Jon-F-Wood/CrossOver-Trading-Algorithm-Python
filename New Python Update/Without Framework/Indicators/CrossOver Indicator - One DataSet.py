@@ -508,55 +508,43 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 				#if I'll be doing that with the excell file.  We'll see. TheStopPriceS
 
 
-#next work on Short Target and below
 		#Short TARGET
-		if CurrentlyInMarketS = True and not CurrentlyInMarketL:
-			Begin
-				if HasYetToHitTargetS = False:
-					Begin
-					#Gapping	
-						if Open of Data2 < TheTargetPriceS:
-							Begin
-								CurrentlyInMarketS = False				
-								Plot12(Open of Data2,"Exit", DarkGreen)
-								StopIsAtBrkEvnS = False
-								NowTrailingS = False
-							End
-						else:
-						#No Gapping	
-							Begin	
-								CurrentlyInMarketS = False				
-								Plot12(TheTargetPriceS,"Exit", DarkGreen)
-								StopIsAtBrkEvnS = False
-								NowTrailingS = False
-							End	
-					End
-			End		
+		if CurrentlyInMarketS and not CurrentlyInMarketL:
+			if HasYetToHitTargetS == False:
+				#Gapping	
+				if O < TheTargetPriceS:
+					CurrentlyInMarketS = False				
+					StopIsAtBrkEvnS = False
+					NowTrailingS = False
+					#indicate to excel that the trade was exited on the Open of this bar due to gapping
+					#and was due to the target price being hit
+				#No Gapping
+				else:	
+					CurrentlyInMarketS = False				
+					StopIsAtBrkEvnS = False
+					NowTrailingS = False
+					#indicate to excel that the trade was exited on this bar at TheTargetPriceS 
+					#and was due to the target price being hit
 
 		#Long TARGET
-		if CurrentlyInMarketL = True and not CurrentlyInMarketS:
-			Begin
-				if HasYetToHitTargetL = False:
-					Begin
-					#Gapping	
-						if Open > TheTargetPriceL:
-							Begin
-								CurrentlyInMarketL = False				
-								Plot12(Open,"Exit", DarkGreen)
-								StopIsAtBrkEvnL = False
-								NowTrailingL = False
-							End
-						else:
-						#No Gapping	
-							Begin	
-								CurrentlyInMarketL = False				
-								Plot12(TheTargetPriceL,"Exit", DarkGreen)
-								StopIsAtBrkEvnL = False
-								NowTrailingL = False
-							End	
-					End
-			End	
+		if CurrentlyInMarketL and not CurrentlyInMarketS:
+			if HasYetToHitTargetL == False:
+				#Gapping	
+				if O > TheTargetPriceL:
+					CurrentlyInMarketL = False				
+					StopIsAtBrkEvnL = False
+					NowTrailingL = False
+					#indicate to excel that the trade was exited on the Open of this bar due to gapping
+					#and was due to the target price being hit
+				#No Gapping
+				else:	
+					CurrentlyInMarketL = False				
+					StopIsAtBrkEvnL = False
+					NowTrailingL = False
+					#indicate to excel that the trade was exited on this bar at TheTargetPriceL 
+					#and was due to the target price being hit
 			
+		
 		#Looks for a New Short Position	
 		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2 and CurrentlyInMarketS = False and CurrentlyInMarketL = False and ASetupIsActiveL = False and ASetupIsActiveS = False: 
 			Begin
