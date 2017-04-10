@@ -186,22 +186,50 @@ def maxBarsBack(arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time, LastBarOnChart):
 			return  max_bars_back
 
 def CrossOver(arr1, arr2, BarsBack):
+	#Reset CrossOver after 1 Bar
+ 	CrossOver = False
+ 
+ 	#Obvious CrossOver
+ 	if (arr1[-2] < arr2[-2]) and (arr1[-1] > arr2[-1]):
+ 		CrossOver = True	
+ 
+ 	#Not So obvious Crossover
+ 	elif (arr1[-2] == arr2[-2]) and (arr1[-1] > arr2[-1]):
+ 		for i in xrange(2, BarsBack): #Loop through until...
+ 			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
+ 				if arr1[i] < arr2[i]: #check if it was below before
+ 					CrossOver = True
+ 				else:				
 					CrossOver = False
 								
 				break	
 			
-			#Assume that if that if the last evaluated bar is reached and is still equal: there is a CrossOver
+			#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossOver
 			if i == BarsBack and (arr1[i] == arr2[i]):
 				CrossOver = True
 
 	return CrossOver
 
 def CrossUnder(arr1, arr2, BarsBack):
+	#Reset CrossUnder after 1 Bar
+ 	CrossUnder = False
+ 
+ 	#Obvious CrossUnder
+ 	if (arr1[-2] > arr2[-2]) and (arr1[-1] < arr2[-1]):
+ 		CrossUnder = True	
+ 
+ 	#Not So obvious CrossUnder
+ 	elif (arr1[-2] == arr2[-2]) and (arr1[-1] < arr2[-1]):
+ 		for i in xrange(2, BarsBack): #Loop through until...
+ 			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
+ 				if arr1[i] > arr2[i]: #check if it was below before
+ 					CrossUnder = True
+ 				else:				
 					CrossUnder = False
 								
 				break	
 			
-			#Assume that if that if the last evaluated bar is reached and is still equal: there is a CrossUnder
+			#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossUnder
 			if i == BarsBack and (arr1[i] == arr2[i]):
 				CrossUnder = True
 	
