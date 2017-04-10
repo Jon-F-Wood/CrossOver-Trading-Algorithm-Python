@@ -10,8 +10,8 @@ based on TS framework mode of interpretation
 
 		
 #Variables:
-	JL1 = None 				   #JumpLine1 (Tenkan-Sen)
-	JL2 = None 				   #JumpLine2	(Tenkan-Sen)
+	JL1 = None 				       #JumpLine1 (Tenkan-Sen)
+	JL2 = None 				       #JumpLine2	(Tenkan-Sen)
 	_TrailingJL = None			   #JumpLine used for trailing
 		
 	TheEntryPriceS = None		   #Holds the Entry Price on Currently active Short Orders	
@@ -20,8 +20,8 @@ based on TS framework mode of interpretation
 	TheStopPriceS = None		   #Holds the Stop Price on Currently active Short Orders
 	TheStopPriceL = None	       #Holds the Stop Price on Currently active Long Orders
 	
-	TheBreakevenTgtS = None	   #Holds the Breakeven Target Price on Currently active Short Orders	
-	TheBreakevenTgtL = None	   #Holds the Breakeven Target Price on Currently active Long Orders	
+	TheBreakevenTgtS = None	       #Holds the Breakeven Target Price on Currently active Short Orders	
+	TheBreakevenTgtL = None	       #Holds the Breakeven Target Price on Currently active Long Orders	
 	
 	TheTrailingTgtS = None		   #Holds the Trailing Target Price on Currently active Short Orders
 	TheTrailingTgtL = None		   #Holds the Trailing Target Price on Currently active Long Orders
@@ -82,12 +82,10 @@ based on TS framework mode of interpretation
 	HasYetToHitTargetS = False   #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Target Price (It hasn't Hit Target Yet)
 	HasYetToHitTargetL = False   #The High Of the Current Bar is Lower than the Currently Acive Long Position's Target Price (It hasn't Hit Target Yet) r
  	
- 	CurrentlyInMarketS = False #Used to tell whether or not the system is currently in a Short position or not
- 	CurrentlyInMarketL = False #Used to tell whether or not the system is currently in a Long position or not
+ 	CurrentlyInMarketS = False   #Used to tell whether or not the system is currently in a Short position or not
+ 	CurrentlyInMarketL = False   #Used to tell whether or not the system is currently in a Long position or not
  
- 	StageOrder = False	
-#Change PlotAddons from True/False input to On/Off input (1/On : 0/Off) 
-	_PlotAddons = True      #Last Declaration of a Variable 
+ 	StageOrder = False	         #Last Declaration of a Variable 
 
 #Overall Functions of framework
 	LastBarOnChart = False
@@ -109,7 +107,7 @@ based on TS framework mode of interpretation
 	input_TrailingOffSetTics = 2      #How Many ticks Below the MA the Stop is Trailed	
 	input_EntryOffsetTics = 13        #High + (EntryOffsetTics/PriceScale) = the Price where the Entry is Placed
 	input_StopOffsetTics = -4         #Low - (StopOffsetTIcs/PriceScale) = The Price where the StopLoss is Placed	
-	input_UseRiskFilter = 1		  	  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
+	input_UseRiskFilter = True		  	  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
 	input_MaxTicsRisk = 790		  	  #Maximum tics risk for a trade to be considered valid
 	input_MinTicsRisk = 120		  	  #Minimum tics risk for a trade to be considered valid
 	input_PlotAddons = True     	  #Plot all Setups even when in the Market.  1/On : 0/Off
@@ -546,179 +544,128 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			
 		
 		#Looks for a New Short Position	
-		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2 and CurrentlyInMarketS = False and CurrentlyInMarketL = False and ASetupIsActiveL = False and ASetupIsActiveS = False: 
-			Begin
+		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2 and not CurrentlyInMarketS and not CurrentlyInMarketL and ASetupIsActiveL == False and ASetupIsActiveS == False: 
 			#Reset Setting	
-				JL1CrossedUnderJL2 = False	
-				ASetupIsActiveS = True	
-				StopIsAtBrkEvnS = False
-				TrailingIsOnS = False
-				NowTrailingS = False
-				StageOrder = True
-				
+			JL1CrossedUnderJL2 = False	
+			ASetupIsActiveS = True	
+			StopIsAtBrkEvnS = False
+			TrailingIsOnS = False
+			NowTrailingS = False
+			StageOrder = True
+			
 			#Set values and Plot the point							
-				TheTargetPriceS = L3 - ((High of Data4 - L3) * TargetLength)     #Target				
-				TheTrailingTgtS = L3 - ((High of Data4 - L3) * TrailingTarget)   #Trailing Target
-				TheBreakevenTgtS = L3 - ((High of Data4 - L3) * BreakevenTarget) #Breakeven Target	
-				TheEntryPriceS = L3 - (EntryOffsetTics/PriceScale)   	  		  		  #Entry 
-				TheStopPriceS = High of Data4  + (StopOffsetTics/PriceScale)     	   				  #Stop	
-								
-				if TheBreakevenTgtS > (TheEntryPriceS - Spread(5)) or TheTrailingTgtS > (TheEntryPriceS - Spread(5)):
-					Begin
-						StageOrder = False	
-						ASetupIsActiveS = False
-					End			
-										
-				PipsRiskS = ((TheStopPriceS - TheEntryPriceS) + Spread(20) + (20/Pricescale))*(PriceScale/10)
+			TheTargetPriceS = L - ((H - L) * TargetLength)     	#Target				
+			TheTrailingTgtS = L - ((H - L) * TrailingTarget)   	#Trailing Target
+			TheBreakevenTgtS = L - ((H - L) * BreakevenTarget) 	#Breakeven Target	
+			TheEntryPriceS = L - (EntryOffsetTics/PriceScale)  	#Entry 
+			TheStopPriceS = H  + (StopOffsetTics/PriceScale)    #Stop	
+							
+			if TheBreakevenTgtS > TheEntryPriceS or TheTrailingTgtS > TheEntryPriceS:
+				StageOrder = False	
+				ASetupIsActiveS = False
+									
+			PipsRiskS = ((TheStopPriceS-TheEntryPriceS)+(input_ExpectedTicsSlippage/input_Pricescale)) * (input_PriceScale/10)
+			
+			if (UseRiskFilter and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter and JLCDDiff > 0):
+				ASetupIsActiveS = False
+				StageOrder = False	
 				
-				if (UseRiskFilter = 1 and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter and JLCDDiff > 0) :
-					Begin
-						ASetupIsActiveS = False
-						StageOrder = False	
-					End
-					
-				if StageOrder:
-					Begin
-						Plot5(TheTargetPriceS, "Target", Cyan)
-						Plot6(TheTrailingTgtS, "TrailTgt", Cyan)				
-						Plot7(TheBreakevenTgtS, "BrkEvnTgt", Cyan)
-						Plot8(TheEntryPriceS, "Entry", Cyan)
-						Plot9(TheStopPriceS, "Stop", Cyan)	
-						Plot14(PipsRiskS,"Pips Risk ", Cyan)
-						Plot15(((TheEntryPriceS - TheTargetPriceS + Spread(20))/PipsRiskS)*(Pricescale/10"R:R ", Cyan)	
-						StageOrder = False
-					End	
-			End		
+			if StageOrder:
+				#indicate to excel file that an order is staged and make it aware of:
+				#TheTargetPriceS, TheTrailingTgtS, TheBreakevenTgtS, TheEntryPriceS, TheStopPriceS, PipsRiskS,
+				#as well as the Risk:Reward Ratio which is ((TheEntryPriceS - TheTargetPriceS)/PipsRiskS)*(input_Pricescale/10)
+				StageOrder = False
 
 		#Looks for a New Long Position	
-		if JL1CrossedOverJL2 and CloseHigherThanJL2 and GreenBar and CurrentlyInMarketL = False and CurrentlyInMarketS = False and ASetupIsActiveL = False and ASetupIsActiveS = False: 
-			Begin
+		if JL1CrossedOverJL2 and GreenBar and CloseHigherThanJL2 and not CurrentlyInMarketS and not CurrentlyInMarketL and ASetupIsActiveL == False and ASetupIsActiveS == False: 
 			#Reset Setting		
-				JL1CrossedOverJL2 = False		
-				ASetupIsActiveL = True	
-				StopIsAtBrkEvnL = False
-				TrailingIsOnL = False
-				NowTrailingL = False
-				StageOrder = True		
-				
+			JL1CrossedOverJL2 = False		
+			ASetupIsActiveL = True	
+			StopIsAtBrkEvnL = False
+			TrailingIsOnL = False
+			NowTrailingL = False
+			StageOrder = True		
+			
 			#Set values and Plot the point
-				TheTargetPriceL = High of Data4 + ((High of Data4 - L3) * TargetLength)     #Target
-				TheTrailingTgtL = High of Data4 + ((High of Data4 - L3) * TrailingTarget)   #Trailing Target
-				TheBreakevenTgtL = High of Data4 + ((High of Data4 - L3) * BreakevenTarget) #Breakeven Target
-				TheEntryPriceL = High of Data4 + (EntryOffsetTics/PriceScale)   			  		   #Entry 
-				TheStopPriceL = L3 - (StopOffsetTics/PriceScale)     	   				   #Stop				
-												
-				if TheBreakevenTgtL < (TheEntryPriceL + Spread(5)) or TheTrailingTgtL < (TheEntryPriceL + Spread(5)):
-					Begin	
-						StageOrder = False
-						ASetupIsActiveL = False
-					End		
+			TheTargetPriceL = H + ((H - L) * TargetLength)     	#Target
+			TheTrailingTgtL = H + ((H - L) * TrailingTarget)   	#Trailing Target
+			TheBreakevenTgtL = H + ((H - L) * BreakevenTarget) 	#Breakeven Target
+			TheEntryPriceL = H + (EntryOffsetTics/PriceScale)   #Entry 
+			TheStopPriceL = L - (StopOffsetTics/PriceScale)     #Stop				
+											
+			if TheBreakevenTgtL < TheEntryPriceL or TheTrailingTgtL < TheEntryPriceL:	
+				StageOrder = False
+				ASetupIsActiveL = False
+			
+			PipsRiskL = ((TheEntryPriceL - TheStopPriceL) + (input_ExpectedTicsSlippage/input_Pricescale)) * (input_PriceScale/10)	
 				
-				PipsRiskL = ((TheEntryPriceL - TheStopPriceL) + Spread(20) + (20/Pricescale))*(PriceScale/10)		
+			if (UseRiskFilter and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter and JLCDDiff < 0):
+				ASetupIsActiveL = False
+				StageOrder = False	
 					
-				if (UseRiskFilter = 1 and ((PipsRiskS*10) < MinTicsRisk) or ((PipsRiskS*10) > MaxTicsRisk)) or (UseJLCDFilter and JLCDDiff < 0) :
-					Begin
-						ASetupIsActiveL = False
-						StageOrder = False	
-					End
-						
-				if StageOrder:
-					Begin
-						Plot5(TheTargetPriceL, "Target", Cyan)
-						Plot6(TheTrailingTgtL, "TrailTgt", Cyan)	
-						Plot7(TheBreakevenTgtL, "BrkEvnTgt", Cyan)					
-						Plot8(TheEntryPriceL, "Entry", Cyan)
-						Plot9(TheStopPriceL, "Stop", Cyan)	
-						Plot14(PipsRiskL, "Pips Risk ", Cyan)
-						Plot15(((TheTargetPriceL - TheEntryPriceL + Spread(20))/PipsRiskL)*(Pricescale/10 "R:R ", Cyan)
-						StageOrder = False
-					End	
-			End
+			if StageOrder:
+				#indicate to excel file that an order is staged and make it aware of:
+				#TheTargetPriceS, TheTrailingTgtS, TheBreakevenTgtS, TheEntryPriceS, TheStopPriceS, PipsRiskS,
+				#as well as the Risk:Reward Ratio which is ((TheTargetPriceL - TheEntryPriceL)/PipsRiskL)*(input_Pricescale/10)
+				StageOrder = False
 
 		#Addon Trades		
-		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2: 
-			Begin
+		if JL1CrossedUnderJL2 and RedBar and CloseLessThanJL2:
 			#Stop looking for now
-				JL1CrossedUnderJL2 = False
-				StageOrder = True
+			JL1CrossedUnderJL2 = False
+			StageOrder = True
 				
 			#Plot the point 
-				Value1 = L3 - ((High of Data4 - L3) * TargetLength) 				
-				Value2 = L3 - ((High of Data4 - L3) * TrailingTarget)							
-				Value3 = L3 - ((High of Data4 - L3) * BreakevenTarget)
-				Value4 = L3 - (EntryOffsetTics/PriceScale)  
-				Value5 = High of Data4 + (StopOffsetTics/PriceScale) 			
-					
-				if Value1 > Value4 or Value2 > Value4 or Value3 > Value4 :
-					StageOrder = False	
+			addon_TgtPriceS = L - ((H - L) * TargetLength) 				
+			addon_TrailTgtS = L - ((H - L) * TrailingTarget)							
+			addon_BrkevnTgtS = L - ((H - L) * BreakevenTarget)
+			addon_EntryPriceS = L - (EntryOffsetTics/PriceScale)  
+			addon_StopPriceS = H + (StopOffsetTics/PriceScale) 			
 				
-				if UseRiskFilter = 1 and ((((Value5 - Value4)*PriceScale) < MinTicsRisk) or	(((Value5 - Value4)*PriceScale) > MaxTicsRisk)):
-					StageOrder = False
-					
-				if _PlotAddons and StageOrder:
-					Begin	
-						Plot17(Value1, "*Tgt")						
-						Plot18(Value2, "*TrailTgt")
-						Plot19(Value3, "*BrkEvnTgt")
-						Plot20(Value4, "*Entry")
-						Plot21(Value5, "*Stop")
-						StageOrder = False						
-					End
-											
-			End				
+			if addon_TgtPriceS > addon_EntryPriceS or addon_TrailTgtS > addon_EntryPriceS or addon_BrkevnTgtS > addon_EntryPriceS :
+				StageOrder = False	
+			
+			if UseRiskFilter and ((((addon_StopPriceS - addon_EntryPriceS)*input_PriceScale) < MinTicsRisk) or	(((addon_StopPriceS - addon_EntryPriceS)*input_PriceScale) > MaxTicsRisk)):
+				StageOrder = False
+				
+			if input_PlotAddons and StageOrder:
+				#indicate to excel file that there is a short addon trade and make it aware of:
+				#addon_TgtPriceS, addon_TrailTgtS, addon_BrkevnTgtS, addon_EntryPriceS, addon_StopPriceS
+				StageOrder = False
+													
 
 		#Addon Trades		
 		if JL1CrossedOverJL2 and CloseHigherThanJL2 and GreenBar: 
-			Begin
 			#Stop looking for now
-				JL1CrossedOverJL2 = False
-				StageOrder = True
+			JL1CrossedOverJL2 = False
+			StageOrder = True
 				
 			#Plot the point 
-				Value6 = High of Data4 + ((High of Data4 - L3) * TargetLength) 				
-				Value7 = High of Data4 + ((High of Data4 - L3) * TrailingTarget)
-				Value8 = High of Data4 + ((High of Data4 - L3) * BreakevenTarget)
-				Value9 = High of Data4 + (EntryOffsetTics/PriceScale)  
-				Value10 = L3 - (StopOffsetTics/PriceScale) 
-								
-				if Value6 < Value9 or Value7 < Value9 or Value8 < Value9:
-					 StageOrder = False
-				
-				if UseRiskFilter = 1 and ((((Value9 - Value10)*PriceScale) < MinTicsRisk) or (((Value9 - Value10)*PriceScale) > MaxTicsRisk)):
-					StageOrder = False
-				
-				if _PlotAddons and StageOrder:
-					Begin	
-						Plot17(Value6, "*Tgt")
-						Plot18(Value7, "*TrailTgt")						
-						Plot19(Value8, "*BrkEvnTgt")
-						Plot20(Value9, "*Entry")
-						Plot21(Value10, "*Stop")
-						StageOrder = False						
-					End						
-			End			
+			addon_TgtPriceL = H + ((H - L) * TargetLength) 				
+			addon_TrailTgtL = H + ((H - L) * TrailingTarget)
+			addon_BrkevnTgtL = H + ((H - L) * BreakevenTarget)
+			addon_EntryPriceL = H + (EntryOffsetTics/PriceScale)  
+			addon_StopPriceL = L - (StopOffsetTics/PriceScale) 
+							
+			if addon_TgtPriceL < addon_EntryPriceL or addon_TrailTgtL < addon_EntryPriceL or addon_BrkevnTgtL < addon_EntryPriceL:
+				 StageOrder = False
+			
+			if UseRiskFilter and ((((addon_EntryPriceL - addon_StopPriceL)*input_PriceScale) < MinTicsRisk) or (((addon_EntryPriceL - addon_StopPriceL)*input_PriceScale) > MaxTicsRisk)):
+				StageOrder = False
+			
+			if input_PlotAddons and StageOrder:
+				#indicate to excel file that there is a long addon trade and make it aware of:
+				#addon_TgtPriceL, addon_TrailTgtL, addon_BrkevnTgtL, addon_EntryPriceL, addon_StopPriceL
+				StageOrder = False		
 
-		#Misc	
-		if High = 99999999999: 
-			Begin	
-				Plot4(0,"=========")
-				Plot10(0,"=========")
-				Plot13(0,"=========")
-				Plot16(0,"=========")
-				Plot50(0,"=========")	
-				
-			End
-				
+		#Misc
+		'''		
 		if prev_ASetupIsActiveL or prev_CurrentlyInMarketL:
-			Begin	
-				SetPlotColor[1](11, Green)
-				Plot11[1]("Long", "Type")
-			End
+			SetPlotColor[1](11, Green)
+			Plot11[1]("Long", "Type")
 			
 		if prev_ASetupIsActiveS or prev_CurrentlyInMarketS:
-			Begin	
-				SetPlotColor[1](11, Red)
-				Plot11[1]("Short", "Type")				
-			End	
-
+			SetPlotColor[1](11, Red)
+			Plot11[1]("Short", "Type")		
+		'''
 	#End of Code	
