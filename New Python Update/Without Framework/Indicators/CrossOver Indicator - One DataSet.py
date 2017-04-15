@@ -7,125 +7,429 @@ based on TS framework mode of interpretation
 
 
 '''
+from datetime import date
+import datetime
 
-		
 #Variables:
-	JL1 = None 				       #JumpLine1 (Tenkan-Sen)
-	JL2 = None 				       #JumpLine2	(Tenkan-Sen)
-	_TrailingJL = None			   #JumpLine used for trailing
-		
-	TheEntryPriceS = None		   #Holds the Entry Price on Currently active Short Orders	
-	TheEntryPriceL = None		   #Holds the Entry Price on Currently active Long Orders	
+JL1 = None 				       #JumpLine1 (Tenkan-Sen)
+JL2 = None 				       #JumpLine2	(Tenkan-Sen)
+_TrailingJL = None			   #JumpLine used for trailing
 	
-	TheStopPriceS = None		   #Holds the Stop Price on Currently active Short Orders
-	TheStopPriceL = None	       #Holds the Stop Price on Currently active Long Orders
+TheEntryPriceS = None		   #Holds the Entry Price on Currently active Short Orders	
+TheEntryPriceL = None		   #Holds the Entry Price on Currently active Long Orders	
+
+TheBreakevenTgtS = None	       #Holds the Breakeven Target Price on Currently active Short Orders	
+TheBreakevenTgtL = None	       #Holds the Breakeven Target Price on Currently active Long Orders	
+
+TheTrailingTgtS = None		   #Holds the Trailing Target Price on Currently active Short Orders
+TheTrailingTgtL = None		   #Holds the Trailing Target Price on Currently active Long Orders
 	
-	TheBreakevenTgtS = None	       #Holds the Breakeven Target Price on Currently active Short Orders	
-	TheBreakevenTgtL = None	       #Holds the Breakeven Target Price on Currently active Long Orders	
-	
-	TheTrailingTgtS = None		   #Holds the Trailing Target Price on Currently active Short Orders
-	TheTrailingTgtL = None		   #Holds the Trailing Target Price on Currently active Long Orders
-		
-	TheTrailingPriceS = None	   #Holds the Price that the Trailing Stop Should be Placed on Short Orders
-	TheTrailingPriceL = None	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
-	
-	TheTargetPriceS = None		   #Holds the Target Price on Currently active Short Orders
-	TheTargetPriceL = None		   #Holds the Target Price on Currently active Long Orders
-	
-	PipsRiskS = None
-	PipsRiskL = None
-	
-	MyJLCD = None
-	JLCDAvg = None
-	JLCDDiff = None
-	
+TheTargetPriceS = None		   #Holds the Target Price on Currently active Short Orders
+TheTargetPriceL = None		   #Holds the Target Price on Currently active Long Orders
+
+PipsRiskS = None
+PipsRiskL = None
+
+MyJLCD = None
+JLCDAvg = None
+JLCDDiff = None
+
 #Variables used to Tell use what MaxBarsBack needs to be set to	
-	Counting = False
-	NumBarsJLsEqual = None
-	MaxBarsJLsEqual = None
-	
+Counting = False
+NumBarsJLsEqual = None
+MaxBarsJLsEqual = None
+
 #Conditional Variables that Hold thier value until changed by a condition	
+StopIsAtBrkEvnS = False      #This Records if a Short Position's Stop is Currenly at Breakeven
+StopIsAtBrkEvnL = False      #This Records if a Long Position's Stop is Currenly at Breakeven
+
+TrailingIsOnS = False		 #The Short Trailing Tgt Has been hit
+TrailingIsOnL = False		 #The Long Trailing Tgt Has been hit
+
+NowTrailingS = False  	     #Short Position's Stop is Now Trailing
+NowTrailingL = False  	     #Long Position's Stop is Now Trailing
+
+#Conditional Variables that are evaluated bar by bar		
+RedBar = False 			     #Is the Current Bar an Down(Red) Bar
+GreenBar = False 			 #Is the Current Bar an Up(Green) Bar	
+
+CloseLessThanJL2 = False     #The Close price of the Current Bar is Lower Than the JL2 Value
+CloseHigherThanJL2 = False   #The Close price of the Current Bar is Higher Than the JL2 Value
+
+JL1CrossedOverJL2 = False	 #Shows there is a Cross Over and no setup has been activated 
+JL1CrossedUnderJL2 = False	 #Shows there is a Cross Under and no setup has been activated
+
+HasNotEnteredYetS = False    #The Low of the Current Bar Is Higher Than the Currently Active Short Position's Entry Price (It hasn't Entered Yet)
+HasNotEnteredYetL = False    #The High of the Current Bar Is Less Than the Currently Active Long Position's Entry Price (It hasn't Entered Yet)	
+
+HasYetToHitStopS = False     #The High of the Current Bar is Lower than the Currently Active Short Position's Stop Price (It hasn't Stopped Out Yet)
+HasYetToHitStopL = False     #The Low of the Current Bar is Higher than the Currently Active Long Position's Stop Price (It hasn't Stopped Out Yet)
+
+HasYetToHitBrkEvnS = False	 #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
+HasYetToHitBrkEvnL = False	 #The High Of the Current Bar is Lower than the Currently Acive Long Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
+
+HasYetToHitTrailingS = False #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Trailing Target (Trailing Tgt has yet to be Hit)
+HasYetToHitTrailingL = False #The High Of the Current Bar is Lower than the Currently Acive Long Position's Trailing Target (Trailing Tgt has yet to be Hit)
+
+HasYetToHitTargetS = False   #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Target Price (It hasn't Hit Target Yet)
+HasYetToHitTargetL = False   #The High Of the Current Bar is Lower than the Currently Acive Long Position's Target Price (It hasn't Hit Target Yet) r
+	
+StageOrder = False	         #Last Declaration of a Variable 
+
+#Workig here right now
+	CurrentlyInMarketS = False   #Used to tell whether or not the system is currently in a Short position or not
+	CurrentlyInMarketL = False   #Used to tell whether or not the system is currently in a Long position or not
 	ASetupIsActiveS = False 	 #This Records if a Short Setup has been Placed or if has been Entered or if it has been cancled
 	ASetupIsActiveL = False 	 #This Records if a Long Setup has been Placed or if has been Entered or if it has been cancled
-	
-	StopIsAtBrkEvnS = False      #This Records if a Short Position's Stop is Currenly at Breakeven
-	StopIsAtBrkEvnL = False      #This Records if a Long Position's Stop is Currenly at Breakeven
-	
-	TrailingIsOnS = False		 #The Short Trailing Tgt Has been hit
-	TrailingIsOnL = False		 #The Long Trailing Tgt Has been hit
-	
-	NowTrailingS = False  	     #Short Position's Stop is Now Trailing
-	NowTrailingL = False  	     #Long Position's Stop is Now Trailing
-	
-#Conditional Variables that are evaluated bar by bar		
-	RedBar = False 			     #Is the Current Bar an Down(Red) Bar
-	GreenBar = False 			 #Is the Current Bar an Up(Green) Bar	
-	
-	CloseLessThanJL2 = False     #The Close price of the Current Bar is Lower Than the JL2 Value
-	CloseHigherThanJL2 = False   #The Close price of the Current Bar is Higher Than the JL2 Value
-
-	JL1CrossedOverJL2 = False	 #Shows there is a Cross Over and no setup has been activated 
-	JL1CrossedUnderJL2 = False	 #Shows there is a Cross Under and no setup has been activated
-	
-	HasNotEnteredYetS = False    #The Low of the Current Bar Is Higher Than the Currently Active Short Position's Entry Price (It hasn't Entered Yet)
-	HasNotEnteredYetL = False    #The High of the Current Bar Is Less Than the Currently Active Long Position's Entry Price (It hasn't Entered Yet)	
-	
-	HasYetToHitStopS = False     #The High of the Current Bar is Lower than the Currently Active Short Position's Stop Price (It hasn't Stopped Out Yet)
-	HasYetToHitStopL = False     #The Low of the Current Bar is Higher than the Currently Active Long Position's Stop Price (It hasn't Stopped Out Yet)
-	
-	HasYetToHitBrkEvnS = False	 #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
-	HasYetToHitBrkEvnL = False	 #The High Of the Current Bar is Lower than the Currently Acive Long Position's Breakeven Target (BrkEvn Tgt has yet to be Hit)
-	
-	HasYetToHitTrailingS = False #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Trailing Target (Trailing Tgt has yet to be Hit)
-	HasYetToHitTrailingL = False #The High Of the Current Bar is Lower than the Currently Acive Long Position's Trailing Target (Trailing Tgt has yet to be Hit)
-	
-	HasYetToHitTargetS = False   #The Low Of the Current Bar is Higher than the Currently Acive Short Position's Target Price (It hasn't Hit Target Yet)
-	HasYetToHitTargetL = False   #The High Of the Current Bar is Lower than the Currently Acive Long Position's Target Price (It hasn't Hit Target Yet) r
- 	
- 	CurrentlyInMarketS = False   #Used to tell whether or not the system is currently in a Short position or not
- 	CurrentlyInMarketL = False   #Used to tell whether or not the system is currently in a Long position or not
- 
- 	StageOrder = False	         #Last Declaration of a Variable 
-
-#Overall Functions of framework
-	LastBarOnChart = False
+	TheTrailingPriceS = None	   #Holds the Price that the Trailing Stop Should be Placed on Short Orders
+	TheTrailingPriceL = None	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
+	TheStopPriceS = None		   #Holds the Stop Price on Currently active Short Orders
+	TheStopPriceL = None	       #Holds the Stop Price on Currently active Long Orders
 #Arrays:
-	_NumBarsJLsEqual = []
-	arr_JL1 = []
-	arr_JL2 = []
+_NumBarsJLsEqual = []
+arr_JL1 = []
+arr_JL2 = []
+data = []
+arr_O = []
+arr_H = []
+arr_L = []
+arr_C = []
+arr_Date = []
+arr_Time = []
 
 #Inputs:  	
-	input_JL1 = 39		   	 	  	  #Length of JumpLine 1 (Typically is JL1 < JL2)
-	input_JL2 = 10 			      	  #Length of JumpLine 2 (Typically is JL2 > JL1)
-	input_CloseCancelsCross = True	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
-	input_UseJLCDFilter = False       
-	input_JLCDLength = 7
-	input_TargetLength = 4.882 	      #High + ((High - Low) * Tgt) = The Price that the Target is Placed
-	input_BreakevenTarget = 1.37      #High + ((High - Low) * BreakevenTarget) = The Price Where the StopLoss is moved up to Breakeven
-	input_TrailingJL = 11		   	  #JL used for Trailing
-	input_TrailingTarget = 1.12       #The Point at which the trade begins to trail
-	input_TrailingOffSetTics = 2      #How Many ticks Below the MA the Stop is Trailed	
-	input_EntryOffsetTics = 13        #High + (EntryOffsetTics/PriceScale) = the Price where the Entry is Placed
-	input_StopOffsetTics = -4         #Low - (StopOffsetTIcs/PriceScale) = The Price where the StopLoss is Placed	
-	input_UseRiskFilter = True		  	  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
-	input_MaxTicsRisk = 790		  	  #Maximum tics risk for a trade to be considered valid
-	input_MinTicsRisk = 120		  	  #Minimum tics risk for a trade to be considered valid
-	input_PlotAddons = True     	  #Plot all Setups even when in the Market.  1/On : 0/Off
-	input_Include_JLs_Equal = False	  #if true includes the length of JLs being equil in the calculation of bars_back
-	input_PriceScale = 10000		  # 1/pricescale = number of decimals in the underlying asset
-	input_ExpectedTicsSlippage = 10	  # this is the expected slippage used to offset the breakeven stop
+input_JL1 = 5		   	 	  	  #Length of JumpLine 1 (Typically is JL1 < JL2)
+input_JL2 = 10 			      	  #Length of JumpLine 2 (Typically is JL2 > JL1)
+input_CloseCancelsCross = True	  #A filter that if activated cancels a trade if the price closes in the oposite direction of the trade's side of JL2. 1/On : 0/Off 	
+input_UseJLCDFilter = False       
+input_JLCDLength = 7
+input_TargetLength = 4.882 	      #High + ((High - Low) * Tgt) = The Price that the Target is Placed
+input_BreakevenTarget = 1.37      #High + ((High - Low) * BreakevenTarget) = The Price Where the StopLoss is moved up to Breakeven
+input_TrailingJL = 7		   	  #JL used for Trailing
+input_TrailingTarget = 1.12       #The Point at which the trade begins to trail
+input_TrailingOffSetTics = 2      #How Many ticks Below the MA the Stop is Trailed	
+input_EntryOffsetTics = 13        #High + (EntryOffsetTics/PriceScale) = the Price where the Entry is Placed
+input_StopOffsetTics = -4         #Low - (StopOffsetTIcs/PriceScale) = The Price where the StopLoss is Placed	
+input_UseRiskFilter = True		  	  #Used to Turn on and Off the Risk Filter.  1/On : 0/Off
+input_MaxTicsRisk = 790		  	  #Maximum tics risk for a trade to be considered valid
+input_MinTicsRisk = 120		  	  #Minimum tics risk for a trade to be considered valid
+input_PlotAddons = True     	  #Plot all Setups even when in the Market.  1/On : 0/Off
+input_Include_JLs_Equal = False	  #if true includes the length of JLs being equil in the calculation of bars_back
+input_PriceScale = 10000		  # 1/pricescale = number of decimals in the underlying asset
+input_ExpectedTicsSlippage = 10	  # this is the expected slippage used to offset the breakeven stop
 
-	if Include_JLs_Equal:
-		bars_back = process_function(data, MaxBarsBack)
-	else:		
-		#might need to be max + 1		
-		bars_back = max(input_JL1, input_JL2, input_JLCDLength, input_TrailingJL)
+data = [[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6],
+		[1,2,3,4,date(1996,03,07),6],[4,5,6,6,date(1996,03,07),6],[7,5,4,4,date(1996,03,07),6]
+		]
 
-	process_function(data, CO_Indicator)
+def process_function(dataArray, functionName):	
+	LastBarOnChart = False
+	for i in dataArray:
+		arr_O.append(i[0])
+		arr_H.append(i[1])
+		arr_L.append(i[2])
+		arr_C.append(i[3])
+		arr_Date.append(i[4])
+		arr_Time.append(i[5])
+		if len(arr_O) > bars_back:
+			del arr_O[0]
+			del arr_H[0]
+			del arr_L[0]
+			del arr_C[0]
+			del arr_Date[0]
+			del arr_Time[0]
+		if len(arr_O) == bars_back:			
+			if dataArray.index(i) == dataArray.index(dataArray[-1]):
+				LastBarOnChart = True
+				print("Last Bar")
 
-def process_function(dataArray, functionName):
+			functionName(arr_O, arr_H, arr_L,arr_C, arr_Date, arr_Time, LastBarOnChart)
+
+		print(len(arr_O))
 	'''
 	!!!make this process a function and the last arugument is a function that runs inside the code
+	!!! Make it so this function only runs when bars back is reached in all arrays
 	!!!MAKE ORIGINAL DATA INTO TUPLE
 	Loop through all data in multiples of 6 {i = (i+1)*6}
 		push data onto respective arrays
@@ -188,57 +492,59 @@ def maxBarsBack(arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time, LastBarOnChart):
 def CrossOver(arr1, arr2, BarsBack):
 	#Reset CrossOver after 1 Bar
  	CrossOver = False
- 
- 	#Obvious CrossOver
- 	if (arr1[-2] < arr2[-2]) and (arr1[-1] > arr2[-1]):
- 		CrossOver = True	
- 
- 	#Not So obvious Crossover
- 	elif (arr1[-2] == arr2[-2]) and (arr1[-1] > arr2[-1]):
- 		for i in xrange(2, BarsBack): #Loop through until...
- 			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
- 				if arr1[i] < arr2[i]: #check if it was below before
- 					CrossOver = True
- 				else:				
-					CrossOver = False
-								
-				break	
-			
-			#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossOver
-			if i == BarsBack and (arr1[i] == arr2[i]):
-				CrossOver = True
+ 	
+ 	if len(arr1) >= 2:
+	 	#Obvious CrossOver
+	 	if (arr1[-2] < arr2[-2]) and (arr1[-1] > arr2[-1]):
+	 		CrossOver = True	
+	 
+	 	#Not So obvious Crossover
+	 	elif (arr1[-2] == arr2[-2]) and (arr1[-1] > arr2[-1]):
+	 		for i in xrange(2, BarsBack): #Loop through until...
+	 			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
+	 				if arr1[i] < arr2[i]: #check if it was below before
+	 					CrossOver = True
+	 				else:				
+						CrossOver = False
+									
+					break	
+				
+				#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossOver
+				if i == BarsBack and (arr1[i] == arr2[i]):
+					CrossOver = True
 
 	return CrossOver
 
 def CrossUnder(arr1, arr2, BarsBack):
 	#Reset CrossUnder after 1 Bar
  	CrossUnder = False
- 
- 	#Obvious CrossUnder
- 	if (arr1[-2] > arr2[-2]) and (arr1[-1] < arr2[-1]):
- 		CrossUnder = True	
- 
- 	#Not So obvious CrossUnder
- 	elif (arr1[-2] == arr2[-2]) and (arr1[-1] < arr2[-1]):
- 		for i in xrange(2, BarsBack): #Loop through until...
- 			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
- 				if arr1[i] > arr2[i]: #check if it was below before
- 					CrossUnder = True
- 				else:				
-					CrossUnder = False
-								
-				break	
-			
-			#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossUnder
-			if i == BarsBack and (arr1[i] == arr2[i]):
-				CrossUnder = True
+ 	
+ 	if len(arr1) >= 2:
+	 	#Obvious CrossUnder
+	 	if (arr1[-2] > arr2[-2]) and (arr1[-1] < arr2[-1]):
+	 		CrossUnder = True	
+	 
+	 	#Not So obvious CrossUnder
+	 	elif (arr1[-2] == arr2[-2]) and (arr1[-1] < arr2[-1]):
+	 		for i in xrange(2, BarsBack): #Loop through until...
+	 			if arr1[i] != arr2[i]: #...it is found where the numbers are no longer equil
+	 				if arr1[i] > arr2[i]: #check if it was below before
+	 					CrossUnder = True
+	 				else:				
+						CrossUnder = False
+									
+					break	
+				
+				#Assume that if that if the last evaluated bar is reached and is still equal then there is a CrossUnder
+				if i == BarsBack and (arr1[i] == arr2[i]):
+					CrossUnder = True
 	
 	return CrossUnder
 
 def JLCD(high, low, JL1, JL2):
 	return JL(high, low, JL1) - JL(high, low, JL2)
 
-def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
+def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time, LastBarOnChart):
 	O = arr_O[-1]
 	H = arr_H[-1]
 	L = arr_L[-1]
@@ -272,18 +578,19 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 	#Push to excell file _JL1,_JL2,_TrailingJL
 
 	#!!!Time needs to be close time of the bars
-	#Exit Trade if market close on weekends
-	if (CurrentlyInMarketL == True or CurrentlyInMarkets == True) and DayofWeek(Date) == Friday and Time == 1500:
+	#Exit Trade if market close on weekends  Monday is 0 and Sunday is 6
+	if (CurrentlyInMarketL or CurrentlyInMarketS) and datetime.datetime.weekday(Date) == 4 and Time == 1500:
 		#Indicate to excell file that the trade was exited on close of this bar (possibly also indicate it was due to it being the weekend)
-		
-	if DayofWeek(Date) == Friday and Time >= 1500:
+		test = 1
+
+	if datetime.datetime.weekday(Date) == 4 and Time >= 1500:
 			CurrentlyInMarketL = False 
 			CurrentlyInMarketS = False
 			ASetupIsActiveS = False
 			ASetupIsActiveL = False
 			JL1CrossedUnderJL2 = False
 			JL1CrossedOverJL2 = False
-	elif (DayofWeek(Date) > Sunday) or (DayofWeek(Date) = Sunday and Time >= 1800) or (DayofWeek(Date) = Friday and Time < 1500):
+	elif (datetime.datetime.weekday(Date) != 5) or (datetime.datetime.weekday(Date) == 6 and Time >= 1800) or (datetime.datetime.weekday(Date) == 4 and Time < 1500):
 				
 		#Set the Trailing Price
 		TrailingOffSetTics = input_TrailingOffSetTics/input_PriceScale
@@ -337,8 +644,9 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 		if ASetupIsActiveS and not ASetupIsActiveL:
 			if HasNotEnteredYetS:
 				#Cancled?
-				if JL1CrossedOverJL2 = False:
+				if JL1CrossedOverJL2 == False:
 					#Idicate to excel that there is still an entry available at TheEntryPriceS
+					test = 1
 				else:
 					ASetupIsActiveS = False
 			else:
@@ -350,8 +658,9 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 		if ASetupIsActiveL and not ASetupIsActiveS:
 			if HasNotEnteredYetL:
 				#Cancled?
-				if JL1CrossedUnderJL2 = False:
+				if JL1CrossedUnderJL2 == False:
 					#Idicate to excel that there is still an entry available at TheEntryPriceL
+					test = 1
 				else:
 					ASetupIsActiveL = False
 			else:
@@ -372,23 +681,26 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 					#Is the Trade A Breakeven Or Trailing	
 					if TheStopPriceS <= TheEntryPriceS: 	
 						#Gapping?	
-						if O > TheStopPriceS:									
+						if O > TheStopPriceS:							
 							if TheStopPriceS == TheTrailingPriceS:
 								#indicate to excel that the trade was exited on the Open of this bar due to gapping
 								#and was due to the trailing stoploss
+								test = 1
 							else:
 								#indicate to excel that the trade was exited on the Open of this bar due to gapping
 								#and was due to the breakeven stoploss
+								test = 1
 
 						#No Gapping
 						else: 
 							if TheStopPriceS == TheTrailingPriceS:
 								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
 								#and was due to the trailing stoploss
+								test = 1
 							else:
 								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
 								#and was due to the breakeven stoploss
-
+								test = 1
 					#Fixed Stop	
 					else:
 						#Gapping?	
@@ -396,11 +708,13 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 							if StopIsAtBrkEvnS == False:								
 								#indicate to excel that the trade was exited on the Open of this bar due to gapping
 								#and was due to the fixed stoploss	
+								test = 1
 						#No Gapping
 						else:
 							if StopIsAtBrkEvnS == False:								
 								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
 								#and was due to the fixed stoploss
+								test = 1
 		
 				#Begin Using Breakeven or Trailing Stop?	
 				#BREAKEVEN - Evaluate if Breakeven Target has been hit
@@ -445,7 +759,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			if HasYetToHitTargetS and (ASetupIsActiveS or CurrentlyInMarketS) and not CurrentlyInMarketL:
 				#Normally I would plot the stop price even if the setup was active and not entered but idk 
 				#if I'll be doing that with the excell file.  We'll see. Plot9 (TheStopPriceS, "Stop", Cyan)
-		
+				test = 1
 		#Long STOPLOSS	
 		if ASetupIsActiveL or CurrentlyInMarketL and ( not ASetupIsActiveS or not CurrentlyInMarketS ):
 			#if There is a trade that has entered...	
@@ -463,18 +777,22 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 							if TheStopPriceL == TheTrailingPriceL:
 								#indicate to excel that the trade was exited on the Open of this bar due to gapping
 								#and was due to the trailing stoploss
+								test = 1
 							else:
 								#indicate to excel that the trade was exited on the Open of this bar due to gapping
 								#and was due to the breakeven stoploss
+								test = 1
 
 						#No Gapping
 						else: 
 							if TheStopPriceL == TheTrailingPriceL:
 								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
 								#and was due to the trailing stoploss
+								test = 1
 							else:
 								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
 								#and was due to the breakeven stoploss
+								test = 1
 
 					#Fixed Stop	
 					else:
@@ -482,12 +800,14 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 						if O < TheStopPriceL:
 							if StopIsAtBrkEvnL == False:								
 								#indicate to excel that the trade was exited on the Open of this bar due to gapping
-								#and was due to the fixed stoploss	
+								#and was due to the fixed stoploss
+								test = 1	
 						#No Gapping
 						else:
 							if StopIsAtBrkEvnL == False:								
 								#indicate to excel that the trade was exited on this bar at TheStopPriceS 
 								#and was due to the fixed stoploss
+								test = 1
 		
 				#Begin Using Breakeven or Trailing Stop?	
 				#BREAKEVEN - Evaluate if Breakeven Target has been hit
@@ -532,7 +852,7 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			if HasYetToHitTargetL and (ASetupIsActiveL or CurrentlyInMarketL) and not CurrentlyInMarketL:
 				#Normally I would plot the stop price even if the setup was active and not entered but idk 
 				#if I'll be doing that with the excell file.  We'll see. TheStopPriceS
-
+				test = 1
 
 		#Short TARGET
 		if CurrentlyInMarketS and not CurrentlyInMarketL:
@@ -697,3 +1017,12 @@ def CO_Indicator (arr_O, arr_H, arr_L, arr_C, arr_Date, arr_Time):
 			Plot11[1]("Short", "Type")		
 		'''
 	#End of Code	
+
+#Process Data
+if input_Include_JLs_Equal:
+	bars_back = process_function(data, MaxBarsBack)
+else:		
+	#might need to be max + 1		
+	bars_back = max(input_JL1, input_JL2, input_JLCDLength, input_TrailingJL)
+
+process_function(data, CO_Indicator)
