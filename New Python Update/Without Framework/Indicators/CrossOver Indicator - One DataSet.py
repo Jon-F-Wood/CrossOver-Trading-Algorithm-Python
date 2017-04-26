@@ -85,6 +85,7 @@ StageOrder = False	         #Last Declaration of a Variable
 	TheTrailingPriceL = None	   #Holds the Price that the Trailing Stop Should be Placed on Long Orders
 	TheStopPriceS = None		   #Holds the Stop Price on Currently active Short Orders
 	TheStopPriceL = None	       #Holds the Stop Price on Currently active Long Orders
+
 #Arrays:
 _NumBarsJLsEqual = []
 arr_JL1 = []
